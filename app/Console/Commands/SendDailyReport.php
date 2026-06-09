@@ -6,6 +6,7 @@ use App\Mail\DailyReportMail;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\User;
+use App\Services\SettingsService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -15,16 +16,18 @@ class SendDailyReport extends Command
     protected $signature = 'report:daily';
     protected $description = 'Kirim laporan harian ke email owner';
 
-    public function handle(): int
+    public function handle(SettingsService $settings): int
     {
+        $configuredEmail = trim((string) $settings->get('owner_email', ''));
         $owners = User::query()->where('role', 'owner')->whereNotNull('email')->get();
 
-        if ($owners->isEmpty()) {
+        // Determine recipients
+        if (empty($configuredEmail) && $owners->isEmpty()) {
             $this->warn('Tidak ada owner dengan email terdaftar.');
             return self::SUCCESS;
         }
 
-        $today = now()->startOfDay();
+        $today    = now()->startOfDay();
         $todayEnd = now()->endOfDay();
         $dateLabel = now()->translatedFormat('d F Y');
 
@@ -44,7 +47,7 @@ class SendDailyReport extends Command
             return [
                 'invoice' => $sale->invoice_number,
                 'cashier' => $sale->cashier->name,
-                'reason' => $correction?->reason ?? '-',
+                'reason'  => $correction?->reason ?? '-',
             ];
         })->values()->toArray();
 
@@ -53,16 +56,29 @@ class SendDailyReport extends Command
             ->orderBy('stock')
             ->get()
             ->map(fn (Product $p): array => [
-                'name' => $p->name,
-                'stock' => $p->stock,
+                'name'     => $p->name,
+                'stock'    => $p->stock,
                 'supplier' => $p->supplier,
             ])
             ->toArray();
 
-        foreach ($owners as $owner) {
+        // Build recipient list: settings email takes priority over DB owner accounts
+        if (!empty($configuredEmail)) {
+            $recipients = collect([[
+                'email' => $configuredEmail,
+                'name'  => $owners->first()?->name ?? 'Owner',
+            ]]);
+        } else {
+            $recipients = $owners->map(fn (User $u) => [
+                'email' => $u->email,
+                'name'  => $u->name,
+            ]);
+        }
+
+        foreach ($recipients as $recipient) {
             try {
-                Mail::to($owner->email)->send(new DailyReportMail(
-                    ownerName: $owner->name,
+                Mail::to($recipient['email'])->send(new DailyReportMail(
+                    ownerName: $recipient['name'],
                     date: $dateLabel,
                     totalTransactions: $completedSales->count(),
                     revenue: (int) $completedSales->sum('total'),
@@ -70,10 +86,10 @@ class SendDailyReport extends Command
                     voids: $voids,
                     lowStocks: $lowStocks,
                 ));
-                $this->info("Laporan dikirim ke {$owner->email}");
+                $this->info("Laporan dikirim ke {$recipient['email']}");
             } catch (\Throwable $e) {
-                Log::error("Gagal kirim laporan harian ke {$owner->email}: {$e->getMessage()}");
-                $this->error("Gagal kirim ke {$owner->email}: {$e->getMessage()}");
+                Log::error("Gagal kirim laporan harian ke {$recipient['email']}: {$e->getMessage()}");
+                $this->error("Gagal kirim ke {$recipient['email']}: {$e->getMessage()}");
             }
         }
 
