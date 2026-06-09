@@ -57,7 +57,7 @@
 
             <div class="field" style="flex-direction:row;align-items:center;gap:10px;display:flex">
                 <input type="checkbox" id="auto_print_receipt" name="auto_print_receipt"
-                       value="1" {{ ($settings['auto_print_receipt'] ?? '1') == '1' ? 'checked' : '' }}
+                       value="1" {{ old('auto_print_receipt', $settings['auto_print_receipt'] ?? '1') == '1' ? 'checked' : '' }}
                        style="width:auto">
                 <label for="auto_print_receipt" style="color:var(--ink);font-size:14px;font-weight:400">
                     Cetak struk otomatis setelah transaksi selesai
