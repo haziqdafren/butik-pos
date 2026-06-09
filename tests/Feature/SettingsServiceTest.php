@@ -11,10 +11,18 @@ class SettingsServiceTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_get_returns_default_when_key_missing(): void
+    public function test_get_returns_default_when_key_is_truly_absent(): void
     {
         $service = app(SettingsService::class);
-        $this->assertSame('Toko Kami', $service->get('store_name', 'Toko Kami'));
+        // 'nonexistent_key' is not in defaults() so all()[$key] is null — default is used
+        $this->assertSame('Toko Kami', $service->get('nonexistent_key', 'Toko Kami'));
+    }
+
+    public function test_get_returns_empty_string_when_key_has_empty_default(): void
+    {
+        $service = app(SettingsService::class);
+        // store_name is in defaults() with '' — empty string is a valid stored value, not absent
+        $this->assertSame('', $service->get('store_name', 'Toko Kami'));
     }
 
     public function test_set_persists_and_get_retrieves(): void

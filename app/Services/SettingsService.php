@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\StoreSettings;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class SettingsService
 {
@@ -28,7 +29,9 @@ class SettingsService
     {
         $val = $this->all()[$key] ?? null;
 
-        if (($val === null || $val === '') && $default !== null) {
+        // Only fall back to $default when the value is truly absent (null),
+        // not when the user has intentionally stored an empty string.
+        if ($val === null && $default !== null) {
             return $default;
         }
 
@@ -66,12 +69,14 @@ class SettingsService
 
     public function setMany(array $data): void
     {
-        foreach ($data as $key => $value) {
-            StoreSettings::query()->updateOrCreate(
-                ['key' => $key],
-                ['value' => $value]
-            );
-        }
+        DB::transaction(function () use ($data): void {
+            foreach ($data as $key => $value) {
+                StoreSettings::query()->updateOrCreate(
+                    ['key' => $key],
+                    ['value' => $value]
+                );
+            }
+        });
 
         $this->clearCache();
     }
