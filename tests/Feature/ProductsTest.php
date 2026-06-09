@@ -1,0 +1,141 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Product;
+use App\Models\Store;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
+use Tests\TestCase;
+
+class ProductsTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private function owner(): User
+    {
+        return User::query()->create([
+            'name'     => 'Owner Butik',
+            'email'    => 'owner@butik.test',
+            'password' => Hash::make('password'),
+            'role'     => 'owner',
+        ]);
+    }
+
+    private function cashier(): User
+    {
+        return User::query()->create([
+            'name'     => 'Kasir Utama',
+            'email'    => 'kasir@butik.test',
+            'password' => Hash::make('password'),
+            'role'     => 'cashier',
+        ]);
+    }
+
+    private function store(): Store
+    {
+        return Store::query()->create([
+            'name'    => 'Butik Utama',
+            'code'    => 'BTK',
+            'address' => 'Jl. Test No. 1',
+        ]);
+    }
+
+    private function validProductPayload(int $storeId): array
+    {
+        return [
+            'store_id'      => $storeId,
+            'name'          => 'Kemeja Linen Putih',
+            'category'      => 'kemeja',
+            'color'         => 'Putih',
+            'size'          => 'M',
+            'supplier'      => 'Supplier B',
+            'cost_price'    => 80000,
+            'selling_price' => 160000,
+            'stock'         => 5,
+            'min_stock'     => 2,
+        ];
+    }
+
+    public function test_guest_is_redirected_from_products_page(): void
+    {
+        $this->get('/barang')->assertRedirect('/login');
+    }
+
+    public function test_cashier_can_view_products_page(): void
+    {
+        $this->actingAs($this->cashier())->get('/barang')->assertOk();
+    }
+
+    public function test_owner_can_view_products_page(): void
+    {
+        $this->actingAs($this->owner())->get('/barang')->assertOk();
+    }
+
+    public function test_owner_can_create_a_product(): void
+    {
+        $store = $this->store();
+
+        $response = $this->actingAs($this->owner())
+            ->post('/barang', $this->validProductPayload($store->id));
+
+        $response->assertRedirect();
+        $response->assertSessionHas('status', 'Barang berhasil ditambahkan.');
+    }
+
+    public function test_creation_requires_store_id(): void
+    {
+        $payload = $this->validProductPayload(999);
+        $payload['store_id'] = '';
+
+        $this->actingAs($this->owner())
+            ->post('/barang', $payload)
+            ->assertSessionHasErrors('store_id');
+    }
+
+    public function test_creation_requires_selling_price(): void
+    {
+        $store = $this->store();
+        $payload = $this->validProductPayload($store->id);
+        unset($payload['selling_price']);
+
+        $this->actingAs($this->owner())
+            ->post('/barang', $payload)
+            ->assertSessionHasErrors('selling_price');
+    }
+
+    public function test_created_product_appears_in_db_with_correct_fields(): void
+    {
+        $store = $this->store();
+
+        $this->actingAs($this->owner())
+            ->post('/barang', $this->validProductPayload($store->id));
+
+        $this->assertDatabaseHas('products', [
+            'store_id'      => $store->id,
+            'name'          => 'Kemeja Linen Putih',
+            'category'      => 'kemeja',
+            'color'         => 'Putih',
+            'size'          => 'M',
+            'cost_price'    => 80000,
+            'selling_price' => 160000,
+            'stock'         => 5,
+            'min_stock'     => 2,
+        ]);
+    }
+
+    public function test_sku_is_auto_generated_after_create(): void
+    {
+        $store = $this->store();
+
+        $this->actingAs($this->owner())
+            ->post('/barang', $this->validProductPayload($store->id));
+
+        $product = Product::query()->where('name', 'Kemeja Linen Putih')->first();
+
+        $this->assertNotNull($product);
+        $this->assertNotNull($product->sku);
+        $this->assertNotEmpty($product->sku);
+    }
+}
