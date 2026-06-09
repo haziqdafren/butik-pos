@@ -108,7 +108,7 @@
     <div class="card" style="margin-top:16px">
         <h3>Restock Barang</h3>
         <p class="muted">Catat pembelian barang dari supplier. Stok akan otomatis bertambah dan harga modal diperbarui.</p>
-        <form method="post" action="{{ route('owner.restock') }}">
+        <form method="post" action="{{ route('owner.restock') }}" data-restock-form>
             @csrf
             <div class="grid-2" style="gap:12px">
                 <div class="field">
@@ -125,12 +125,18 @@
                     <input class="input" name="supplier" maxlength="120" placeholder="Nama supplier / toko">
                 </div>
                 <div class="field">
+                    <label>Ongkos Kirim/pcs</label>
+                    <input class="input" type="number" data-restock-shipping min="0" placeholder="Otomatis dari kategori produk">
+                    <small class="muted">Dihitung otomatis saat produk dipilih. Bisa diubah.</small>
+                </div>
+                <div class="field">
                     <label>Jumlah <span style="color:red">*</span></label>
                     <input class="input" name="qty" type="number" min="1" required placeholder="Contoh: 12 (1 bal)">
                 </div>
                 <div class="field">
                     <label>Harga per Unit (Rp) <span style="color:red">*</span></label>
                     <input class="input" name="unit_cost" type="number" min="0" required placeholder="Harga beli per pcs">
+                    <small data-restock-preview class="muted" style="margin-top:4px;display:block" hidden></small>
                 </div>
                 <div class="field" style="grid-column:1/-1">
                     <label>Catatan Barang</label>
@@ -140,4 +146,7 @@
             <button class="button" style="margin-top:12px">Simpan Restock</button>
         </form>
     </div>
+<script>
+window.PRODUCT_CATEGORIES = @json($products->pluck('category', 'id'));
+</script>
 </x-layouts.app>
