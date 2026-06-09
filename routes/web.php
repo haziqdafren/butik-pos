@@ -14,6 +14,7 @@ Route::middleware('auth')->group(function (): void {
     // Kasir
     Route::get('/kasir', [AppController::class, 'pos'])->name('cashier.pos');
     Route::get('/kasir/history', [AppController::class, 'cashierHistory'])->name('cashier.history');
+    Route::get('/kasir/struk/{sale}', [AppController::class, 'receipt'])->name('sales.receipt');
     Route::post('/kasir/checkout', [AppController::class, 'checkout'])->name('sales.checkout');
     Route::post('/transaksi/{sale}/void', [AppController::class, 'selfVoid'])->name('sales.self-void');
 

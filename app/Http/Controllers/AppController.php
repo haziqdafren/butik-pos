@@ -128,7 +128,10 @@ class AppController extends Controller
             return back()->withInput()->withErrors(['checkout' => $exception->getMessage()]);
         }
 
-        return redirect()->route('cashier.pos')->with('status', "Transaksi {$sale->invoice_number} berhasil disimpan.");
+        return redirect()
+            ->route('cashier.pos')
+            ->with('status', "Transaksi {$sale->invoice_number} berhasil disimpan.")
+            ->with('print_sale_id', $sale->id);
     }
 
     public function selfVoid(Request $request, Sale $sale, PosService $service): RedirectResponse
@@ -235,6 +238,22 @@ class AppController extends Controller
         $settings->setMany($data);
 
         return redirect()->route('owner.settings')->with('status', 'Pengaturan berhasil disimpan.');
+    }
+
+    public function receipt(Sale $sale, SettingsService $settings): View
+    {
+        abort_unless(
+            $sale->user_id === auth()->id() || auth()->user()->isOwner(),
+            403
+        );
+
+        $sale->load('items.product', 'cashier');
+
+        return view('app.receipt', [
+            'sale'      => $sale,
+            'settings'  => $settings->all(),
+            'autoPrint' => $settings->getBool('auto_print_receipt', true),
+        ]);
     }
 
     private function categories(): array
