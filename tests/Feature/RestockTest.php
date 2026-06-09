@@ -105,12 +105,40 @@ class RestockTest extends TestCase
         $owner   = $this->owner();
         $product = $this->product(stock: 2);
 
-        // Create an unread low_stock notification for this product
+        // Create a second product in a separate store so we can verify scoped resolution
+        $otherStore = Store::query()->create([
+            'name'    => 'Butik Cabang',
+            'code'    => 'CAB',
+            'address' => 'Jl. Cabang No. 2',
+        ]);
+        $otherProduct = Product::query()->create([
+            'store_id'      => $otherStore->id,
+            'sku'           => 'CAB-KAO-PUT-S-001',
+            'name'          => 'Kaos Polos Putih',
+            'category'      => 'kaos',
+            'color'         => 'Putih',
+            'size'          => 'S',
+            'supplier'      => 'Supplier B',
+            'cost_price'    => 40000,
+            'selling_price' => 80000,
+            'stock'         => 1,
+            'min_stock'     => 3,
+        ]);
+
+        // Create an unread low_stock notification for the primary product
         Notification::query()->create([
             'type'  => 'low_stock',
             'title' => 'Stok Rendah',
             'body'  => 'Kemeja Linen Hitam stok menipis.',
             'data'  => ['product_id' => $product->id],
+        ]);
+
+        // Create an unread low_stock notification for the OTHER product
+        $otherNotification = Notification::query()->create([
+            'type'  => 'low_stock',
+            'title' => 'Stok Rendah',
+            'body'  => 'Kaos Polos Putih stok menipis.',
+            'data'  => ['product_id' => $otherProduct->id],
         ]);
 
         $this->assertDatabaseHas('notifications', [
@@ -124,8 +152,15 @@ class RestockTest extends TestCase
             'unit_cost'  => 90000,
         ]);
 
-        $notification = Notification::query()->where('type', 'low_stock')->first();
+        // The notification for the restocked product should now be marked read
+        $notification = Notification::query()
+            ->whereJsonContains('data->product_id', $product->id)
+            ->first();
         $this->assertNotNull($notification->read_at);
+
+        // The notification for the OTHER product must remain unread (scoped query check)
+        $otherNotification->refresh();
+        $this->assertNull($otherNotification->read_at);
     }
 
     public function test_restock_requires_qty_at_least_1(): void

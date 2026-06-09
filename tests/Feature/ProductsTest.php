@@ -125,6 +125,34 @@ class ProductsTest extends TestCase
         ]);
     }
 
+    public function test_cashier_can_also_create_product(): void
+    {
+        $cashier = User::query()->create([
+            'name'     => 'Kasir Utama',
+            'email'    => 'kasir@butik.test',
+            'password' => Hash::make('password'),
+            'role'     => 'cashier',
+        ]);
+
+        $store = Store::query()->create(['name' => 'Butik Utama', 'code' => 'BTK', 'address' => 'Jl. Test']);
+
+        $response = $this->actingAs($cashier)->post('/barang', [
+            'store_id'      => $store->id,
+            'name'          => 'Kaos Putih',
+            'category'      => 'kaos',
+            'color'         => 'Putih',
+            'size'          => 'M',
+            'cost_price'    => 50000,
+            'selling_price' => 95000,
+            'stock'         => 10,
+            'min_stock'     => 2,
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('status');
+        $this->assertDatabaseHas('products', ['name' => 'Kaos Putih', 'category' => 'kaos']);
+    }
+
     public function test_sku_is_auto_generated_after_create(): void
     {
         $store = $this->store();
