@@ -122,8 +122,8 @@
             <span>
                 @php
                     $attrs = array_filter([
-                        $item->product->color ?? null,
-                        $item->product->size  ?? null,
+                        $item->product?->color ?? null,
+                        $item->product?->size  ?? null,
                     ]);
                 @endphp
                 {{ implode(' · ', $attrs) }}
