@@ -240,7 +240,7 @@ class AppController extends Controller
         return redirect()->route('owner.settings')->with('status', 'Pengaturan berhasil disimpan.');
     }
 
-    public function receipt(Sale $sale, SettingsService $settings): View
+    public function receipt(Request $request, Sale $sale, SettingsService $settings): View
     {
         abort_unless(
             $sale->user_id === auth()->id() || auth()->user()->isOwner(),
@@ -252,7 +252,7 @@ class AppController extends Controller
         return view('app.receipt', [
             'sale'      => $sale,
             'settings'  => $settings->all(),
-            'autoPrint' => $settings->getBool('auto_print_receipt', true),
+            'autoPrint' => !$request->boolean('reprint') && $settings->getBool('auto_print_receipt', true),
         ]);
     }
 

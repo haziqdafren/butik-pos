@@ -28,6 +28,13 @@
                             <div class="row-actions">
                                 <label class="button secondary mini" for="sale-detail-{{ $sale->id }}">Detail</label>
                                 @if($sale->status === 'completed')
+                                    <button type="button"
+                                            id="cetak-btn-{{ $sale->id }}"
+                                            class="button secondary mini"
+                                            onclick="(function(){
+                                                var p = window.open('/kasir/struk/{{ $sale->id }}?reprint=1', 'receipt_{{ $sale->id }}', 'width=340,height=700,scrollbars=yes,resizable=yes');
+                                                if (!p) window.open('/kasir/struk/{{ $sale->id }}?reprint=1', '_blank');
+                                            })()">Cetak</button>
                                     <label class="button danger mini" for="sale-void-{{ $sale->id }}">Batalkan</label>
                                 @endif
                             </div>
