@@ -102,7 +102,7 @@
     {{-- Transaction meta --}}
     <div class="row">
         <span class="label">Kasir</span>
-        <span class="value">{{ $sale->cashier->name }}</span>
+        <span class="value">{{ $sale->cashier?->name ?? 'Kasir (dihapus)' }}</span>
     </div>
     <div class="row">
         <span class="label">Tanggal</span>

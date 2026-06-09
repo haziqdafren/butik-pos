@@ -247,7 +247,7 @@ class AppController extends Controller
             403
         );
 
-        $sale->load('items.product', 'cashier');
+        $sale->load('items.product', 'cashier', 'store');
 
         return view('app.receipt', [
             'sale'      => $sale,

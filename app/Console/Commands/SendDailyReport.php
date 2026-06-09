@@ -23,6 +23,7 @@ class SendDailyReport extends Command
 
         // Determine recipients
         if (empty($configuredEmail) && $owners->isEmpty()) {
+            Log::warning('report:daily — tidak ada owner email terdaftar, laporan tidak dikirim.');
             $this->warn('Tidak ada owner dengan email terdaftar.');
             return self::SUCCESS;
         }
