@@ -26,4 +26,6 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/owner/laporan', [AppController::class, 'reports'])->name('owner.reports');
     Route::post('/owner/restock', [AppController::class, 'ownerRestock'])->name('owner.restock');
     Route::post('/owner/notifikasi/baca-semua', [AppController::class, 'markNotificationsRead'])->name('owner.notifications.read-all');
+    Route::get('/owner/settings', [AppController::class, 'settings'])->name('owner.settings');
+    Route::post('/owner/settings', [AppController::class, 'saveSettings'])->name('owner.settings.save');
 });

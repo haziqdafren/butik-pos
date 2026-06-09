@@ -9,6 +9,7 @@ use App\Models\Sale;
 use App\Models\Store;
 use App\Models\User;
 use App\Services\PosService;
+use App\Services\SettingsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -202,6 +203,38 @@ class AppController extends Controller
                     ->sum('qty'),
             ],
         ]);
+    }
+
+    public function settings(SettingsService $settings): View
+    {
+        abort_unless(auth()->user()->isOwner(), 403);
+
+        return view('app.owner-settings', [
+            'settings' => $settings->all(),
+        ]);
+    }
+
+    public function saveSettings(Request $request, SettingsService $settings): RedirectResponse
+    {
+        abort_unless(auth()->user()->isOwner(), 403);
+
+        $data = $request->validate([
+            'store_name'         => ['required', 'string', 'max:120'],
+            'store_address'      => ['nullable', 'string', 'max:255'],
+            'store_phone'        => ['nullable', 'string', 'max:20'],
+            'receipt_footer'     => ['nullable', 'string', 'max:255'],
+            'owner_email'        => ['nullable', 'email', 'max:120'],
+            'store_open_time'    => ['nullable', 'regex:/^\d{2}:\d{2}$/'],
+            'store_close_time'   => ['nullable', 'regex:/^\d{2}:\d{2}$/'],
+            'auto_print_receipt' => ['nullable', 'in:0,1'],
+        ]);
+
+        // Checkbox unchecked = absent from request → default to '0'
+        $data['auto_print_receipt'] = $request->has('auto_print_receipt') ? '1' : '0';
+
+        $settings->setMany($data);
+
+        return redirect()->route('owner.settings')->with('status', 'Pengaturan berhasil disimpan.');
     }
 
     private function categories(): array
