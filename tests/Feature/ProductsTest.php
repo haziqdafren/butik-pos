@@ -4,34 +4,13 @@ namespace Tests\Feature;
 
 use App\Models\Product;
 use App\Models\Store;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
+use Tests\Feature\Concerns\CreatesUsers;
 use Tests\TestCase;
 
 class ProductsTest extends TestCase
 {
-    use RefreshDatabase;
-
-    private function owner(): User
-    {
-        return User::query()->create([
-            'name'     => 'Owner Butik',
-            'email'    => 'owner@butik.test',
-            'password' => Hash::make('password'),
-            'role'     => 'owner',
-        ]);
-    }
-
-    private function cashier(): User
-    {
-        return User::query()->create([
-            'name'     => 'Kasir Utama',
-            'email'    => 'kasir@butik.test',
-            'password' => Hash::make('password'),
-            'role'     => 'cashier',
-        ]);
-    }
+    use RefreshDatabase, CreatesUsers;
 
     private function store(): Store
     {
@@ -127,16 +106,9 @@ class ProductsTest extends TestCase
 
     public function test_cashier_can_also_create_product(): void
     {
-        $cashier = User::query()->create([
-            'name'     => 'Kasir Utama',
-            'email'    => 'kasir@butik.test',
-            'password' => Hash::make('password'),
-            'role'     => 'cashier',
-        ]);
-
         $store = Store::query()->create(['name' => 'Butik Utama', 'code' => 'BTK', 'address' => 'Jl. Test']);
 
-        $response = $this->actingAs($cashier)->post('/barang', [
+        $response = $this->actingAs($this->cashier())->post('/barang', [
             'store_id'      => $store->id,
             'name'          => 'Kaos Putih',
             'category'      => 'kaos',
@@ -149,7 +121,7 @@ class ProductsTest extends TestCase
         ]);
 
         $response->assertRedirect();
-        $response->assertSessionHas('status');
+        $response->assertSessionHas('status', 'Barang berhasil ditambahkan.');
         $this->assertDatabaseHas('products', ['name' => 'Kaos Putih', 'category' => 'kaos']);
     }
 

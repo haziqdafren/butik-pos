@@ -2,34 +2,13 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
+use Tests\Feature\Concerns\CreatesUsers;
 use Tests\TestCase;
 
 class AuthTest extends TestCase
 {
-    use RefreshDatabase;
-
-    private function owner(): User
-    {
-        return User::query()->create([
-            'name'     => 'Owner Butik',
-            'email'    => 'owner@butik.test',
-            'password' => Hash::make('password'),
-            'role'     => 'owner',
-        ]);
-    }
-
-    private function cashier(): User
-    {
-        return User::query()->create([
-            'name'     => 'Kasir Utama',
-            'email'    => 'kasir@butik.test',
-            'password' => Hash::make('password'),
-            'role'     => 'cashier',
-        ]);
-    }
+    use RefreshDatabase, CreatesUsers;
 
     public function test_guest_sees_login_page(): void
     {

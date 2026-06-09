@@ -5,34 +5,13 @@ namespace Tests\Feature;
 use App\Models\Notification;
 use App\Models\Product;
 use App\Models\Store;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
+use Tests\Feature\Concerns\CreatesUsers;
 use Tests\TestCase;
 
 class RestockTest extends TestCase
 {
-    use RefreshDatabase;
-
-    private function owner(): User
-    {
-        return User::query()->create([
-            'name'     => 'Owner Butik',
-            'email'    => 'owner@butik.test',
-            'password' => Hash::make('password'),
-            'role'     => 'owner',
-        ]);
-    }
-
-    private function cashier(): User
-    {
-        return User::query()->create([
-            'name'     => 'Kasir Utama',
-            'email'    => 'kasir@butik.test',
-            'password' => Hash::make('password'),
-            'role'     => 'cashier',
-        ]);
-    }
+    use RefreshDatabase, CreatesUsers;
 
     private function product(int $stock = 10): Product
     {

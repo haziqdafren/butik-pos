@@ -3,37 +3,15 @@
 namespace Tests\Feature;
 
 use App\Models\Notification;
-use App\Models\Product;
 use App\Models\Sale;
 use App\Models\Store;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
+use Tests\Feature\Concerns\CreatesUsers;
 use Tests\TestCase;
 
 class OwnerDashboardTest extends TestCase
 {
-    use RefreshDatabase;
-
-    private function owner(): User
-    {
-        return User::query()->create([
-            'name'     => 'Owner Butik',
-            'email'    => 'owner@butik.test',
-            'password' => Hash::make('password'),
-            'role'     => 'owner',
-        ]);
-    }
-
-    private function cashier(): User
-    {
-        return User::query()->create([
-            'name'     => 'Kasir Utama',
-            'email'    => 'kasir@butik.test',
-            'password' => Hash::make('password'),
-            'role'     => 'cashier',
-        ]);
-    }
+    use RefreshDatabase, CreatesUsers;
 
     public function test_guest_is_redirected_from_owner_dashboard(): void
     {
@@ -45,12 +23,12 @@ class OwnerDashboardTest extends TestCase
         $this->actingAs($this->cashier())->get('/owner/dashboard')->assertForbidden();
     }
 
-    public function test_owner_gets_200_on_owner_dashboard(): void
+    public function test_owner_can_view_owner_dashboard(): void
     {
         $this->actingAs($this->owner())->get('/owner/dashboard')->assertOk();
     }
 
-    public function test_owner_gets_200_on_laporan(): void
+    public function test_owner_can_view_laporan_page(): void
     {
         $this->actingAs($this->owner())->get('/owner/laporan')->assertOk();
     }
@@ -130,7 +108,7 @@ class OwnerDashboardTest extends TestCase
         $response = $this->actingAs($owner)->get('/owner/dashboard');
 
         $response->assertOk();
-        // The view receives summary data; verify the page renders with the revenue amount visible
-        $response->assertSee('185');
+        // The view renders revenue with number_format($total, 0, ',', '.') → "185.000" for Indonesian locale
+        $response->assertSee('185.000');
     }
 }
