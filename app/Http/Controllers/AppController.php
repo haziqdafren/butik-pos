@@ -71,6 +71,18 @@ class AppController extends Controller
         ]);
     }
 
+    public function ownerHistory(): View
+    {
+        abort_unless(auth()->user()->isOwner(), 403);
+
+        return view('app.owner-history', [
+            'sales' => Sale::query()
+                ->with('items', 'cashier', 'discount', 'corrections.requester')
+                ->latest()
+                ->paginate(20),
+        ]);
+    }
+
     public function pos(): View
     {
         return view('app.pos', [

@@ -25,6 +25,7 @@
         @if(auth()->user()->isOwner())
             <div class="nav-section">Owner</div>
             <a class="nav-link {{ request()->routeIs('owner.dashboard') ? 'active' : '' }}" href="{{ route('owner.dashboard') }}">Dashboard Owner</a>
+            <a class="nav-link {{ request()->routeIs('owner.history') ? 'active' : '' }}" href="{{ route('owner.history') }}">History Transaksi</a>
             <a class="nav-link {{ request()->routeIs('owner.reports') ? 'active' : '' }}" href="{{ route('owner.reports') }}">Laporan Pendapatan</a>
             <a class="nav-link {{ request()->routeIs('owner.settings') ? 'active' : '' }}" href="{{ route('owner.settings') }}">Pengaturan Toko</a>
         @endif
