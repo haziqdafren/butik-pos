@@ -124,6 +124,8 @@ document.addEventListener("submit", (event) => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
+    initRupiahPreviews();
+
     if (Array.isArray(window.POS_INITIAL_CART) && window.POS_INITIAL_CART.length) {
         window.POS.cart = window.POS_INITIAL_CART;
         window.POS.render();
@@ -153,7 +155,3 @@ function initRupiahPreviews() {
         update();
     });
 }
-
-document.addEventListener('DOMContentLoaded', function () {
-    initRupiahPreviews();
-});
