@@ -8,7 +8,7 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: 'Courier New', Courier, monospace;
+            font-family: Arial, sans-serif;
             font-size: 11px;
             line-height: 1.4;
             background: #f0f0f0;
@@ -19,10 +19,11 @@
             min-height: 100vh;
         }
 
+        /* Screen preview: fixed pixel width so it's readable in browser */
         .receipt {
             background: white;
-            width: 220px;
-            padding: 10px 8px;
+            width: 192px; /* approx 48mm @ 96dpi */
+            padding: 8px 6px;
             border: 1px solid #ccc;
         }
 
@@ -31,27 +32,33 @@
         .right   { text-align: right; }
         .muted   { color: #555; }
 
-        .divider       { border: none; border-top: 1px dashed #aaa; margin: 5px 0; }
-        .divider-solid { border: none; border-top: 1px solid #333; margin: 5px 0; }
+        .divider       { border: none; border-top: 1px dashed #888; margin: 4px 0; }
+        .divider-solid { border: none; border-top: 1px solid #222; margin: 4px 0; }
 
+        /* Two-column row: label left, value right */
         .row { display: flex; justify-content: space-between; margin: 2px 0; }
-        .row .label { white-space: nowrap; margin-right: 4px; }
-        .row .value { text-align: right; }
+        .row .label { white-space: nowrap; margin-right: 4px; flex-shrink: 0; }
+        .row .value { text-align: right; word-break: break-all; }
 
-        .item-name   { font-weight: bold; margin-top: 4px; margin-bottom: 1px; }
-        .item-detail { display: flex; justify-content: space-between; }
-        .item-sub    { text-align: right; color: #444; }
+        /* Item table */
+        .items-table { width: 100%; border-collapse: collapse; margin: 2px 0; }
+        .items-table td { vertical-align: top; padding: 1px 0; font-size: 11px; }
+        .col-name  { width: 55%; }
+        .col-qty   { width: 15%; text-align: center; }
+        .col-price { width: 30%; text-align: right; }
+
+        .item-attrs { color: #666; font-size: 10px; }
 
         .total-row { display: flex; justify-content: space-between; font-weight: bold; font-size: 12px; margin: 2px 0; }
 
         .footer-msg { text-align: center; margin-top: 6px; font-size: 10px; }
 
+        /* Screen-only buttons */
         .no-print {
             margin-top: 16px;
             display: flex;
             gap: 8px;
         }
-
         .btn {
             padding: 8px 16px;
             border: 0;
@@ -71,14 +78,15 @@
                 display: block;
             }
             .receipt {
+                width: 48mm;
+                margin: 0 auto;
+                padding: 2mm;
                 border: none;
-                width: 100%;
-                padding: 2mm 0;
             }
             .no-print { display: none !important; }
             @page {
                 size: 58mm auto;
-                margin: 3mm 2mm;
+                margin: 0;
             }
         }
     </style>
@@ -116,36 +124,45 @@
     <hr class="divider">
 
     {{-- Items --}}
-    @foreach($sale->items as $item)
-        <div class="item-name">{{ $item->name }}</div>
-        <div class="item-detail muted">
-            <span>
-                @php
-                    $attrs = array_filter([
-                        $item->product?->color ?? null,
-                        $item->product?->size  ?? null,
-                    ]);
-                @endphp
-                {{ implode(' · ', $attrs) }}
-            </span>
-            <span>{{ $item->qty }}x &nbsp;Rp {{ number_format($item->unit_price, 0, ',', '.') }}</span>
-        </div>
-        @if($item->qty > 1)
-            <div class="item-sub">Rp {{ number_format($item->line_total, 0, ',', '.') }}</div>
-        @endif
-    @endforeach
+    <table class="items-table">
+        @foreach($sale->items as $item)
+            <tr>
+                <td class="col-name">
+                    <strong>{{ $item->name }}</strong>
+                    @php
+                        $attrs = array_filter([
+                            $item->product?->color ?? null,
+                            $item->product?->size  ?? null,
+                        ]);
+                    @endphp
+                    @if($attrs)
+                        <div class="item-attrs">{{ implode(' · ', $attrs) }}</div>
+                    @endif
+                </td>
+                <td class="col-qty">{{ $item->qty }}x</td>
+                <td class="col-price">{{ number_format($item->unit_price, 0, ',', '.') }}</td>
+            </tr>
+            @if($item->qty > 1)
+                <tr>
+                    <td class="col-name"></td>
+                    <td class="col-qty"></td>
+                    <td class="col-price muted">={{ number_format($item->line_total, 0, ',', '.') }}</td>
+                </tr>
+            @endif
+        @endforeach
+    </table>
 
     <hr class="divider">
 
     {{-- Subtotal / Diskon / Total --}}
     <div class="row">
         <span>Subtotal</span>
-        <span>Rp {{ number_format($sale->subtotal, 0, ',', '.') }}</span>
+        <span>{{ number_format($sale->subtotal, 0, ',', '.') }}</span>
     </div>
     @if($sale->discount_amount > 0)
         <div class="row">
             <span>Diskon</span>
-            <span>- Rp {{ number_format($sale->discount_amount, 0, ',', '.') }}</span>
+            <span>- {{ number_format($sale->discount_amount, 0, ',', '.') }}</span>
         </div>
     @endif
     <hr class="divider">
@@ -159,11 +176,11 @@
     {{-- Payment --}}
     <div class="row">
         <span>{{ $sale->payment_method }}</span>
-        <span>Rp {{ number_format($sale->amount_paid, 0, ',', '.') }}</span>
+        <span>{{ number_format($sale->amount_paid, 0, ',', '.') }}</span>
     </div>
     <div class="row">
         <span>Kembalian</span>
-        <span>Rp {{ number_format($sale->change, 0, ',', '.') }}</span>
+        <span>{{ number_format($sale->change, 0, ',', '.') }}</span>
     </div>
 
     <hr class="divider-solid">
