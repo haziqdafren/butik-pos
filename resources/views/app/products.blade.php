@@ -1,6 +1,5 @@
 <x-layouts.app title="Input Barang dan Pembelian">
-    <div class="grid-2">
-        <section class="card">
+    <section class="card">
             <h3>Tambah Barang Baru</h3>
             <form method="post" action="{{ route('products.store') }}" data-product-form>
                 @csrf
@@ -19,7 +18,7 @@
                         </select>
                     </div>
                     <div class="field"><label>Warna</label><input class="input" name="color"></div>
-                    <div class="field"><label>Ukuran</label><input class="input" name="size"></div>
+                    <div class="field"><label>Ukuran</label><x-size-select name="size" value="" /></div>
                     <div class="field"><label>Supplier</label><input class="input" name="supplier"></div>
                     <div class="field">
                         <label>Ongkos Kirim/pcs</label>
@@ -38,28 +37,7 @@
                 </div>
                 <button class="button">Simpan Barang</button>
             </form>
-        </section>
-
-        <section class="card">
-            <h3>Pembelian / Restock</h3>
-            <form method="post" action="{{ route('purchases.store') }}">
-                @csrf
-                <div class="field">
-                    <label>Barang</label>
-                    <select class="input" name="product_id" required>
-                        @foreach($products as $product)<option value="{{ $product->id }}">{{ $product->sku }} · {{ $product->name }}</option>@endforeach
-                    </select>
-                </div>
-                <div class="grid-2" style="grid-template-columns:1fr 1fr">
-                    <div class="field"><label>Jumlah Beli</label><input class="input" type="number" name="qty" min="1" required></div>
-                    <div class="field"><label>Modal Baru</label><input class="input" type="number" name="unit_cost" min="0" required></div>
-                </div>
-                <div class="field"><label>Supplier</label><input class="input" name="supplier"></div>
-                <div class="field"><label>Catatan</label><input class="input" name="notes"></div>
-                <button class="button">Catat Pembelian</button>
-            </form>
-        </section>
-    </div>
+    </section>
 
     <section class="card" style="margin-top:16px">
         <h3>Stok Barang</h3>

@@ -155,3 +155,17 @@ function initRupiahPreviews() {
         update();
     });
 }
+
+function sizeSelectChange(sel) {
+    var wrapper = sel.closest('[data-size-wrapper]');
+    var custom  = wrapper.querySelector('[data-size-custom]');
+    var hidden  = wrapper.querySelector('input[type="hidden"]');
+    if (sel.value === 'other') {
+        custom.hidden = false;
+        custom.oninput = function () { hidden.value = custom.value; };
+        hidden.value = custom.value;
+    } else {
+        custom.hidden = true;
+        hidden.value  = sel.value;
+    }
+}
