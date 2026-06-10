@@ -21,8 +21,8 @@
                 <div style="padding:10px 0;border-bottom:1px solid #f3f4f6">
                     <div style="display:flex;justify-content:space-between;align-items:flex-start">
                         <div>
-                            <span class="badge {{ $notif->type === 'void_transaction' ? 'red' : 'amber' }}">
-                                {{ $notif->type === 'void_transaction' ? 'Pembatalan' : 'Stok Menipis' }}
+                            <span class="badge {{ $notif->type === 'void_transaction' ? 'red' : ($notif->type === 'out_of_stock' ? 'red' : 'amber') }}">
+                                {{ $notif->type === 'void_transaction' ? 'Pembatalan' : ($notif->type === 'out_of_stock' ? 'Stok Habis' : 'Stok Sedikit') }}
                             </span>
                             <strong style="margin-left:6px">{{ $notif->title }}</strong>
                             <div class="muted" style="margin-top:2px">{{ $notif->body }}</div>
@@ -100,7 +100,7 @@
                         <strong>{{ $product->name }}</strong>
                         <div class="muted">{{ $product->sku }} · {{ $product->store->name }} · Supplier: {{ $product->supplier ?: '-' }}</div>
                     </div>
-                    <span class="badge {{ $product->stock <= 2 ? 'red' : 'amber' }}">{{ $product->stock }} pcs</span>
+                    <span class="badge {{ $product->stockBadgeClass() }}">{{ $product->stockLabel() }}</span>
                 </div>
             @empty
                 <p class="muted">Semua stok masih aman.</p>

@@ -32,7 +32,7 @@ class RestockTest extends TestCase
             'cost_price'    => 90000,
             'selling_price' => 185000,
             'stock'         => $stock,
-            'min_stock'     => 3,
+            'min_stock'     => 0,
         ]);
     }
 
@@ -101,7 +101,7 @@ class RestockTest extends TestCase
             'cost_price'    => 40000,
             'selling_price' => 80000,
             'stock'         => 1,
-            'min_stock'     => 3,
+            'min_stock'     => 0,
         ]);
 
         // Create an unread low_stock notification for the primary product

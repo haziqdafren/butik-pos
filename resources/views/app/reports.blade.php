@@ -52,7 +52,7 @@
                         <td>{{ $product->category }}</td>
                         <td>{{ $product->store->name }}</td>
                         <td>{{ $product->stock }}</td>
-                        <td><span class="badge {{ $product->stock <= $product->min_stock ? 'red' : 'green' }}">{{ $product->stock <= $product->min_stock ? 'Perlu restock' : 'Aman' }}</span></td>
+                        <td><span class="badge {{ $product->stockBadgeClass() }}">{{ $product->stockLabel() }}</span></td>
                         <td><label class="button secondary mini" for="owner-product-detail-{{ $product->id }}">Detail</label></td>
                     </tr>
                 @endforeach
@@ -131,7 +131,6 @@
                         <div class="detail-box"><small>Harga Modal</small><strong>Rp {{ number_format($product->cost_price, 0, ',', '.') }}</strong></div>
                         <div class="detail-box"><small>Harga Jual</small><strong>Rp {{ number_format($product->selling_price, 0, ',', '.') }}</strong></div>
                         <div class="detail-box"><small>Stok Sekarang</small><strong>{{ $product->stock }} pcs</strong></div>
-                        <div class="detail-box"><small>Min Stok</small><strong>{{ $product->min_stock }} pcs</strong></div>
                     </div>
                 </div>
             </div>

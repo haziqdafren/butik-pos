@@ -61,10 +61,7 @@ class PosService
             }
 
             foreach ($totals['products'] as $line) {
-                $freshProduct = $line['product']->fresh();
-                if ($freshProduct->stock <= $freshProduct->min_stock) {
-                    $this->createLowStockNotification($freshProduct);
-                }
+                $this->updateStockNotification($line['product']->fresh());
             }
 
             return $sale->refresh();
@@ -175,10 +172,37 @@ class PosService
         });
     }
 
-    private function createLowStockNotification(Product $product): void
+    private function updateStockNotification(Product $product): void
+    {
+        if ($product->stock === 0) {
+            // Resolve any existing low_stock notification for this product
+            Notification::query()
+                ->where('type', 'low_stock')
+                ->whereNull('read_at')
+                ->whereJsonContains('data->product_id', $product->id)
+                ->update(['read_at' => now()]);
+
+            $this->createNotifIfAbsent(
+                $product,
+                'out_of_stock',
+                'Stok Habis',
+                "Stok {$product->name} sudah habis. Segera lakukan restock."
+            );
+        } elseif ($product->stock === 1) {
+            $supplier = $product->supplier ?: '-';
+            $this->createNotifIfAbsent(
+                $product,
+                'low_stock',
+                'Stok Sedikit',
+                "Stok {$product->name} tinggal 1 pcs. Supplier: {$supplier}."
+            );
+        }
+    }
+
+    private function createNotifIfAbsent(Product $product, string $type, string $title, string $body): void
     {
         $exists = Notification::query()
-            ->where('type', 'low_stock')
+            ->where('type', $type)
             ->whereNull('read_at')
             ->whereJsonContains('data->product_id', $product->id)
             ->exists();
@@ -187,13 +211,11 @@ class PosService
             return;
         }
 
-        $supplier = $product->supplier ?: 'tidak diketahui';
-
         Notification::query()->create([
-            'type' => 'low_stock',
-            'title' => 'Stok Menipis',
-            'body' => "Stok {$product->name} tinggal {$product->stock} pcs. Supplier: {$supplier}.",
-            'data' => ['product_id' => $product->id],
+            'type'  => $type,
+            'title' => $title,
+            'body'  => $body,
+            'data'  => ['product_id' => $product->id],
         ]);
     }
 

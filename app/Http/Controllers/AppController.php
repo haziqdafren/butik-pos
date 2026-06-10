@@ -110,8 +110,9 @@ class AppController extends Controller
             'cost_price' => ['required', 'integer', 'min:0'],
             'selling_price' => ['required', 'integer', 'min:0'],
             'stock' => ['required', 'integer', 'min:0'],
-            'min_stock' => ['required', 'integer', 'min:0'],
         ]);
+
+        $data['min_stock'] = 0;
 
         $store = Store::query()->findOrFail($data['store_id']);
         $data['sku'] = $this->sku($store->code, $data['category'], $data['color'], $data['size']);

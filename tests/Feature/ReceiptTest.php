@@ -137,7 +137,7 @@ class ReceiptTest extends TestCase
             'cost_price'    => $cost,
             'selling_price' => $price,
             'stock'         => $stock,
-            'min_stock'     => 3,
+            'min_stock'     => 0,
         ]);
     }
 

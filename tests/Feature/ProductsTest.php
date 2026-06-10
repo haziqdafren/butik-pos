@@ -33,7 +33,7 @@ class ProductsTest extends TestCase
             'cost_price'    => 80000,
             'selling_price' => 160000,
             'stock'         => 5,
-            'min_stock'     => 2,
+            'min_stock'     => 0,
         ];
     }
 
@@ -100,7 +100,7 @@ class ProductsTest extends TestCase
             'cost_price'    => 80000,
             'selling_price' => 160000,
             'stock'         => 5,
-            'min_stock'     => 2,
+            'min_stock'     => 0,
         ]);
     }
 
@@ -117,7 +117,7 @@ class ProductsTest extends TestCase
             'cost_price'    => 50000,
             'selling_price' => 95000,
             'stock'         => 10,
-            'min_stock'     => 2,
+            'min_stock'     => 0,
         ]);
 
         $response->assertRedirect();

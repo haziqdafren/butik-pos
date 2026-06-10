@@ -53,7 +53,7 @@ class SendDailyReport extends Command
         })->values()->toArray();
 
         $lowStocks = Product::query()
-            ->whereColumn('stock', '<=', 'min_stock')
+            ->where('stock', '<=', 1)
             ->orderBy('stock')
             ->get()
             ->map(fn (Product $p): array => [

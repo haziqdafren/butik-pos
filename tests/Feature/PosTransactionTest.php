@@ -277,62 +277,61 @@ class PosTransactionTest extends TestCase
     public function test_low_stock_notification_created_after_checkout(): void
     {
         $cashier = User::query()->create([
-            'name' => 'Kasir Utama',
-            'email' => 'kasir@butik.test',
-            'password' => Hash::make('password'),
-            'role' => 'cashier',
+            'name' => 'Kasir Utama', 'email' => 'kasir@butik.test',
+            'password' => Hash::make('password'), 'role' => 'cashier',
         ]);
 
-        // stock=3, min_stock=3 → setelah beli 1 menjadi 2 ≤ 3, trigger notif
-        $product = $this->product(stock: 3, price: 185000, cost: 90000);
+        // stock=2 → buy 1 → stock=1, triggers low_stock notif
+        $product = $this->product(stock: 2, price: 185000, cost: 90000);
         $service = app(PosService::class);
 
         $service->checkout($cashier, [
             'payment_method' => 'Tunai',
-            'amount_paid' => 200000,
-            'items' => [['product_id' => $product->id, 'qty' => 1]],
+            'amount_paid'    => 200000,
+            'items'          => [['product_id' => $product->id, 'qty' => 1]],
         ]);
 
-        $this->assertDatabaseHas('notifications', [
-            'type' => 'low_stock',
-        ]);
+        $this->assertDatabaseHas('notifications', ['type' => 'low_stock']);
     }
 
     public function test_low_stock_notification_not_duplicated(): void
     {
         $cashier = User::query()->create([
-            'name' => 'Kasir Utama',
-            'email' => 'kasir@butik.test',
-            'password' => Hash::make('password'),
-            'role' => 'cashier',
+            'name' => 'Kasir Utama', 'email' => 'kasir@butik.test',
+            'password' => Hash::make('password'), 'role' => 'cashier',
         ]);
 
-        $product = $this->product(stock: 5, price: 185000, cost: 90000);
+        $product = $this->product(stock: 4, price: 185000, cost: 90000);
         $service = app(PosService::class);
 
-        // Checkout pertama: stok jadi 4, masih > min_stock(3), belum notif
+        // stock 4→3: no notif
         $service->checkout($cashier, [
-            'payment_method' => 'Tunai',
-            'amount_paid' => 200000,
+            'payment_method' => 'Tunai', 'amount_paid' => 200000,
             'items' => [['product_id' => $product->id, 'qty' => 1]],
         ]);
         $this->assertDatabaseCount('notifications', 0);
 
-        // Checkout kedua: stok jadi 3 = min_stock, notif pertama
+        // stock 3→2: no notif
         $service->checkout($cashier, [
-            'payment_method' => 'Tunai',
-            'amount_paid' => 200000,
+            'payment_method' => 'Tunai', 'amount_paid' => 200000,
+            'items' => [['product_id' => $product->id, 'qty' => 1]],
+        ]);
+        $this->assertDatabaseCount('notifications', 0);
+
+        // stock 2→1: first low_stock notif
+        $service->checkout($cashier, [
+            'payment_method' => 'Tunai', 'amount_paid' => 200000,
             'items' => [['product_id' => $product->id, 'qty' => 1]],
         ]);
         $this->assertDatabaseCount('notifications', 1);
 
-        // Checkout ketiga: stok jadi 2, sudah ada notif unread → skip duplikat
+        // stock 1→0: low_stock resolved, out_of_stock created → total 2 notifications
         $service->checkout($cashier, [
-            'payment_method' => 'Tunai',
-            'amount_paid' => 200000,
+            'payment_method' => 'Tunai', 'amount_paid' => 200000,
             'items' => [['product_id' => $product->id, 'qty' => 1]],
         ]);
-        $this->assertDatabaseCount('notifications', 1);
+        $this->assertDatabaseCount('notifications', 2);
+        $this->assertDatabaseHas('notifications', ['type' => 'out_of_stock', 'read_at' => null]);
     }
 
     private function product(int $stock = 5, int $price = 185000, int $cost = 90000): Product
@@ -354,7 +353,7 @@ class PosTransactionTest extends TestCase
             'cost_price' => $cost,
             'selling_price' => $price,
             'stock' => $stock,
-            'min_stock' => 3,
+            'min_stock' => 0,
         ]);
     }
 }
