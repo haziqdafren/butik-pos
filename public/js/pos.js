@@ -194,11 +194,13 @@ function addProductRow() {
     clone.querySelectorAll('[data-rupiah]').forEach(function (input) {
         var preview = input.parentNode.querySelector('[data-rp-preview]');
         if (!preview) return;
-        input.addEventListener('input', function () {
+        function updatePreview() {
             var n = parseInt(input.value, 10);
             if (!isNaN(n) && n > 0) { preview.textContent = 'Rp ' + n.toLocaleString('id-ID'); preview.hidden = false; }
             else { preview.hidden = true; }
-        });
+        }
+        input.addEventListener('input', updatePreview);
+        input.addEventListener('blur', updatePreview);
     });
 
     // Update name indices
