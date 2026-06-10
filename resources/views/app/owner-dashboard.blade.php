@@ -35,30 +35,34 @@
     </div>
     @endif
 
-    <div class="grid-2" style="margin-top:16px">
-        <div class="card">
-            <h3>Tren Pendapatan</h3>
-            @php($max = max(1, $sales->where('status','completed')->groupBy(fn($sale) => $sale->created_at->format('d M'))->map->sum('total')->max() ?? 1))
-            <div class="chart">
-                @foreach($sales->where('status','completed')->groupBy(fn($sale) => $sale->created_at->format('d M'))->take(7) as $label => $items)
-                    <div class="bar" style="height: {{ max(18, ($items->sum('total') / $max) * 140) }}px"><span>{{ $label }}</span></div>
-                @endforeach
-            </div>
-        </div>
-        <div class="card">
-            <h3>Catatan Diskon</h3>
-            @forelse($recentDiscounts as $discount)
-                <div class="toolbar" style="justify-content:space-between">
-                    <div>
-                        <strong>#{{ $discount->id }} · Rp {{ number_format($discount->amount, 0, ',', '.') }}</strong>
-                        <div class="muted">{{ $discount->requester->name }} · {{ $discount->reason }}</div>
-                    </div>
-                    <span class="badge amber">{{ $discount->type === 'percent' ? $discount->value.'%' : 'nominal' }}</span>
+    {{-- Chart: Tren Pendapatan 7 Hari --}}
+    <div class="card" style="margin-top:16px">
+        <h3 style="margin-bottom:16px">Tren Pendapatan — 7 Hari Terakhir</h3>
+        <div class="chart">
+            @foreach($chartData as $day)
+                @php($barH = $chartMax > 0 ? max(8, round(($day['total'] / $chartMax) * 120)) : 8)
+                <div class="bar {{ $day['is_today'] ? 'bar-today' : '' }}" style="height:{{ $barH }}px" title="Rp {{ number_format($day['total'], 0, ',', '.') }}">
+                    <span class="bar-val">{{ $day['total'] > 0 ? number_format($day['total'] / 1000, 0, ',', '.').'k' : '' }}</span>
+                    <span class="bar-label">{{ $day['label'] }}</span>
                 </div>
-            @empty
-                <p class="muted">Belum ada diskon tercatat.</p>
-            @endforelse
+            @endforeach
         </div>
+    </div>
+
+    {{-- Catatan Diskon --}}
+    <div class="card" style="margin-top:16px">
+        <h3>Catatan Diskon</h3>
+        @forelse($recentDiscounts as $discount)
+            <div class="toolbar" style="justify-content:space-between">
+                <div>
+                    <strong>#{{ $discount->id }} · Rp {{ number_format($discount->amount, 0, ',', '.') }}</strong>
+                    <div class="muted">{{ $discount->requester->name }} · {{ $discount->reason }}</div>
+                </div>
+                <span class="badge amber">{{ $discount->type === 'percent' ? $discount->value.'%' : 'nominal' }}</span>
+            </div>
+        @empty
+            <p class="muted">Belum ada diskon tercatat.</p>
+        @endforelse
     </div>
 
     <div class="grid-2" style="margin-top:16px">

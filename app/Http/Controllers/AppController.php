@@ -22,23 +22,52 @@ class AppController extends Controller
         abort_unless(auth()->user()->isOwner(), 403);
 
         $sales = Sale::query()->with('cashier', 'store')->latest()->get();
-        $lowStock = Product::query()->with('store')->whereColumn('stock', '<=', 'min_stock')->orderBy('stock')->get();
+        $lowStock = Product::query()->where('stock', '<=', 1)->orderBy('stock')->get();
+
+        // Build 7-day chart data: last 7 days including today, oldest first
+        $chartData = collect(range(6, 0))->map(function (int $daysAgo): array {
+            $date = now()->subDays($daysAgo)->startOfDay();
+            return [
+                'label'    => $date->locale('id')->isoFormat('ddd DD'),
+                'date'     => $date->toDateString(),
+                'total'    => 0,
+                'is_today' => $daysAgo === 0,
+            ];
+        })->keyBy('date');
+
+        Sale::query()
+            ->where('status', 'completed')
+            ->whereBetween('created_at', [now()->subDays(6)->startOfDay(), now()->endOfDay()])
+            ->get()
+            ->groupBy(fn(Sale $s) => $s->created_at->toDateString())
+            ->each(function ($daySales, string $date) use (&$chartData): void {
+                if ($chartData->has($date)) {
+                    $entry = $chartData->get($date);
+                    $entry['total'] = (int) $daySales->sum('total');
+                    $chartData->put($date, $entry);
+                }
+            });
+
+        $chartData  = $chartData->values()->toArray();
+        $chartMax   = max(1, ...array_column($chartData, 'total'));
 
         return view('app.owner-dashboard', [
-            'sales' => $sales,
-            'lowStock' => $lowStock,
+            'sales'           => $sales,
+            'lowStock'        => $lowStock,
             'recentDiscounts' => DiscountApproval::query()->with('requester')->latest()->take(8)->get(),
-            'notifications' => Notification::query()->whereNull('read_at')->latest()->take(20)->get(),
-            'unreadCount' => Notification::query()->whereNull('read_at')->count(),
-            'products' => Product::query()->with('store')->orderBy('name')->get(),
-            'productsCount' => Product::query()->count(),
-            'cashiersCount' => User::query()->where('role', 'cashier')->count(),
-            'summary' => [
-                'revenue' => $sales->where('status', 'completed')->sum('total'),
-                'profit' => $sales->where('status', 'completed')->sum('profit'),
-                'discounts' => $sales->where('status', 'completed')->sum('discount_amount'),
+            'notifications'   => Notification::query()->whereNull('read_at')->latest()->take(20)->get(),
+            'unreadCount'     => Notification::query()->whereNull('read_at')->count(),
+            'products'        => Product::query()->with('store')->orderBy('name')->get(),
+            'productsCount'   => Product::query()->count(),
+            'cashiersCount'   => User::query()->where('role', 'cashier')->count(),
+            'summary'         => [
+                'revenue'      => $sales->where('status', 'completed')->sum('total'),
+                'profit'       => $sales->where('status', 'completed')->sum('profit'),
+                'discounts'    => $sales->where('status', 'completed')->sum('discount_amount'),
                 'transactions' => $sales->where('status', 'completed')->count(),
             ],
+            'chartData'       => $chartData,
+            'chartMax'        => $chartMax,
         ]);
     }
 
