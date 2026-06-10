@@ -55,7 +55,8 @@
                     </div>
                     <div class="field">
                         <label>Nilai Diskon</label>
-                        <input class="input" type="number" name="discount_value" min="0" value="{{ old('discount_value', 0) }}">
+                        <input class="input" type="number" name="discount_value" min="0" value="{{ old('discount_value', 0) }}" data-rupiah>
+                        <small class="muted" data-rp-preview hidden></small>
                     </div>
                 </div>
                 <div class="field">
@@ -77,7 +78,8 @@
                 </div>
                 <div class="field">
                     <label>Uang Diterima</label>
-                    <input class="input" type="number" name="amount_paid" min="0" value="{{ old('amount_paid') }}" required>
+                    <input class="input" type="number" name="amount_paid" min="0" value="{{ old('amount_paid') }}" required data-rupiah>
+                    <small class="muted" data-rp-preview hidden></small>
                     <small class="muted" data-paid-hint>Minimal pembayaran: Rp 0</small>
                 </div>
                 <div class="summary-row change-row"><span>Kembalian</span><span data-change-preview>Rp 0</span></div>

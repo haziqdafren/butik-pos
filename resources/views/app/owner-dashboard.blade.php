@@ -135,7 +135,8 @@
                 </div>
                 <div class="field">
                     <label>Harga per Unit (Rp) <span style="color:red">*</span></label>
-                    <input class="input" name="unit_cost" type="number" min="0" required placeholder="Harga beli per pcs">
+                    <input class="input" name="unit_cost" type="number" min="0" required placeholder="Harga beli per pcs" data-rupiah>
+                    <small class="muted" data-rp-preview hidden></small>
                     <small data-restock-preview class="muted" style="margin-top:4px;display:block" hidden></small>
                 </div>
                 <div class="field" style="grid-column:1/-1">
