@@ -33,7 +33,6 @@
                         <small data-disc-max class="muted" style="color:#059669" hidden></small>
                     </div>
                     <div class="field"><label>Stok Awal</label><input class="input" type="number" name="stock" value="1" required></div>
-                    <div class="field"><label>Batas Stok Minimum</label><input class="input" type="number" name="min_stock" value="3" required></div>
                 </div>
                 <button class="button">Simpan Barang</button>
             </form>
@@ -52,7 +51,7 @@
                         <td>{{ $product->category }}</td>
                         <td>{{ $product->color }}</td>
                         <td>{{ $product->size }}</td>
-                        <td><span class="badge {{ $product->stock <= $product->min_stock ? 'amber' : 'green' }}">{{ $product->stock }}</span></td>
+                        <td><span class="badge {{ $product->stockBadgeClass() }}">{{ $product->stockLabel() }}</span></td>
                         <td>Rp {{ number_format($product->cost_price, 0, ',', '.') }}</td>
                         <td>Rp {{ number_format($product->selling_price, 0, ',', '.') }}</td>
                     </tr>
