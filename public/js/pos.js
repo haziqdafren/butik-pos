@@ -169,3 +169,57 @@ function sizeSelectChange(sel) {
         hidden.value  = sel.value;
     }
 }
+
+function addProductRow() {
+    var tbody = document.getElementById('bulk-tbody');
+    if (!tbody) return;
+    var rows  = tbody.querySelectorAll('tr');
+    var clone = rows[rows.length - 1].cloneNode(true);
+
+    // Reset all text/number inputs
+    clone.querySelectorAll('input[type="text"], input[type="number"]').forEach(function (i) {
+        i.value = (i.name && i.name.includes('stock')) ? '1' : '';
+    });
+    // Reset selects to first option
+    clone.querySelectorAll('select').forEach(function (s) { s.selectedIndex = 0; });
+    // Hide manual size input, reset hidden size input
+    clone.querySelectorAll('[data-size-custom]').forEach(function (c) {
+        c.hidden = true;
+        c.value  = '';
+    });
+    clone.querySelectorAll('input[type="hidden"]').forEach(function (h) {
+        if (h.name && h.name.includes('size')) h.value = 'S';
+    });
+    // Re-attach rupiah preview for cloned inputs
+    clone.querySelectorAll('[data-rupiah]').forEach(function (input) {
+        var preview = input.parentNode.querySelector('[data-rp-preview]');
+        if (!preview) return;
+        input.addEventListener('input', function () {
+            var n = parseInt(input.value, 10);
+            if (!isNaN(n) && n > 0) { preview.textContent = 'Rp ' + n.toLocaleString('id-ID'); preview.hidden = false; }
+            else { preview.hidden = true; }
+        });
+    });
+
+    // Update name indices
+    var newIndex = rows.length;
+    clone.querySelectorAll('[name]').forEach(function (el) {
+        el.name = el.name.replace(/rows\[\d+\]/, 'rows[' + newIndex + ']');
+    });
+
+    tbody.appendChild(clone);
+}
+
+function removeProductRow(btn) {
+    var tbody = document.getElementById('bulk-tbody');
+    if (!tbody) return;
+    if (tbody.querySelectorAll('tr').length > 1) {
+        btn.closest('tr').remove();
+        // Re-index remaining rows
+        tbody.querySelectorAll('tr').forEach(function (row, idx) {
+            row.querySelectorAll('[name]').forEach(function (el) {
+                el.name = el.name.replace(/rows\[\d+\]/, 'rows[' + idx + ']');
+            });
+        });
+    }
+}

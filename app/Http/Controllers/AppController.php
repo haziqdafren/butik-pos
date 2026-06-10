@@ -12,6 +12,7 @@ use App\Services\PosService;
 use App\Services\SettingsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -131,6 +132,35 @@ class AppController extends Controller
         Product::query()->create($data);
 
         return back()->with('status', 'Barang berhasil ditambahkan.');
+    }
+
+    public function storeBulkProducts(Request $request): RedirectResponse
+    {
+        $rows = $request->validate([
+            'rows'                 => ['required', 'array', 'min:1'],
+            'rows.*.store_id'      => ['required', 'exists:stores,id'],
+            'rows.*.name'          => ['required', 'string', 'max:120'],
+            'rows.*.category'      => ['required', 'string'],
+            'rows.*.color'         => ['nullable', 'string', 'max:60'],
+            'rows.*.size'          => ['nullable', 'string', 'max:40'],
+            'rows.*.supplier'      => ['nullable', 'string', 'max:120'],
+            'rows.*.cost_price'    => ['required', 'integer', 'min:0'],
+            'rows.*.selling_price' => ['required', 'integer', 'min:0'],
+            'rows.*.stock'         => ['required', 'integer', 'min:0'],
+        ])['rows'];
+
+        DB::transaction(function () use ($rows): void {
+            foreach ($rows as $row) {
+                $store          = Store::query()->findOrFail($row['store_id']);
+                $row['sku']     = $this->sku($store->code, $row['category'], $row['color'] ?? null, $row['size'] ?? null);
+                $row['min_stock'] = 0;
+                Product::query()->create($row);
+            }
+        });
+
+        $count = count($rows);
+
+        return back()->with('status', "{$count} barang berhasil ditambahkan.");
     }
 
     public function purchase(Request $request): RedirectResponse

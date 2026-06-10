@@ -21,6 +21,7 @@ Route::middleware('auth')->group(function (): void {
     // Barang
     Route::get('/barang', [AppController::class, 'products'])->name('products.index');
     Route::post('/barang', [AppController::class, 'storeProduct'])->name('products.store');
+    Route::post('/barang/bulk', [AppController::class, 'storeBulkProducts'])->name('products.bulk-store');
 
     // Owner only
     Route::get('/owner/dashboard', [AppController::class, 'ownerDashboard'])->name('owner.dashboard');

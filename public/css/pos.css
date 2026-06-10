@@ -137,3 +137,10 @@ td { border-bottom: 1px solid var(--line); padding: 11px 10px; font-size: 13px; 
     .topbar { padding: 0 18px; }
     .detail-grid { grid-template-columns: 1fr; }
 }
+
+.bulk-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.bulk-table th { background: var(--nav); color: white; padding: 8px 6px; text-align: left; font-size: 12px; white-space: nowrap; }
+.bulk-table td { padding: 6px 4px; vertical-align: top; border-bottom: 1px solid var(--line); }
+.bulk-table .input { min-width: 80px; padding: 6px 8px; font-size: 12px; }
+.bulk-table select.input { min-width: 100px; }
+.bulk-table-wrap { overflow-x: auto; }
