@@ -4,6 +4,15 @@
             <h3 style="margin:0">Transaksi Saya</h3>
         </div>
         <p class="muted">Jika ada kesalahan input, klik <strong>Batalkan</strong> dan isi alasan dengan jelas. Transaksi akan langsung dibatalkan dan stok dikembalikan.</p>
+        <form method="get" action="{{ route('cashier.history') }}" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+            <input class="input" type="search" name="search" value="{{ $search ?? '' }}" placeholder="Cari no. invoice..." style="min-width:180px">
+            <input class="input" type="date" name="date_from" value="{{ $dateFrom ?? '' }}" style="width:140px">
+            <input class="input" type="date" name="date_to" value="{{ $dateTo ?? '' }}" style="width:140px">
+            <button class="button secondary" type="submit">Filter</button>
+            @if($search || $dateFrom || $dateTo)
+                <a href="{{ route('cashier.history') }}" class="button secondary">Reset</a>
+            @endif
+        </form>
         <div class="table-wrap">
             <table>
                 <thead>

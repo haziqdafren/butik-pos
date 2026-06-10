@@ -1,8 +1,17 @@
 <x-layouts.app title="History Transaksi">
     <section class="card">
-        <div class="toolbar" style="justify-content:space-between; align-items:center">
+        <div class="toolbar" style="justify-content:space-between; align-items:center; margin-bottom:12px">
             <h3 style="margin:0">History Transaksi</h3>
         </div>
+        <form method="get" action="{{ route('owner.history') }}" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+            <input class="input" type="search" name="search" value="{{ $search ?? '' }}" placeholder="Cari invoice atau kasir..." style="min-width:200px">
+            <input class="input" type="date" name="date_from" value="{{ $dateFrom ?? '' }}" style="width:140px">
+            <input class="input" type="date" name="date_to" value="{{ $dateTo ?? '' }}" style="width:140px">
+            <button class="button secondary" type="submit">Filter</button>
+            @if($search || $dateFrom || $dateTo)
+                <a href="{{ route('owner.history') }}" class="button secondary">Reset</a>
+            @endif
+        </form>
         <p class="muted">Semua transaksi dari seluruh kasir. Klik Detail untuk melihat item dan informasi pembayaran.</p>
         <div class="table-wrap">
             <table>

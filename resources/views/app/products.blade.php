@@ -96,7 +96,16 @@
     </section>
 
     <section class="card" style="margin-top:16px">
-        <h3>Stok Barang</h3>
+        <div class="toolbar" style="justify-content:space-between;align-items:center;margin-bottom:12px">
+            <h3 style="margin:0">Stok Barang</h3>
+            <form method="get" action="{{ route('products.index') }}" style="display:flex;gap:8px;align-items:center">
+                <input class="input" type="search" name="search" value="{{ $search ?? '' }}" placeholder="Cari nama, SKU, kategori..." style="min-width:220px">
+                <button class="button secondary" type="submit">Cari</button>
+                @if($search)
+                    <a href="{{ route('products.index') }}" class="button secondary">Reset</a>
+                @endif
+            </form>
+        </div>
         <div class="table-wrap">
             <table>
                 <thead><tr><th>SKU</th><th>Nama</th><th>Kategori</th><th>Warna</th><th>Ukuran</th><th>Stok</th><th>Modal</th><th>Jual</th></tr></thead>
@@ -118,6 +127,7 @@
                 </tbody>
             </table>
         </div>
+        <x-pager :paginator="$products" />
     </section>
 
 </x-layouts.app>

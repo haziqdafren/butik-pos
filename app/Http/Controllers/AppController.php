@@ -76,11 +76,29 @@ class AppController extends Controller
     {
         abort_unless(auth()->user()->isOwner(), 403);
 
+        $search   = request('search');
+        $dateFrom = request('date_from');
+        $dateTo   = request('date_to');
+
+        $sales = Sale::query()
+            ->with('items', 'cashier', 'discount', 'corrections.requester')
+            ->when($search, function ($q, $search) {
+                $q->where(function ($q) use ($search) {
+                    $q->where('invoice_number', 'like', "%{$search}%")
+                      ->orWhereHas('cashier', fn($q) => $q->where('name', 'like', "%{$search}%"));
+                });
+            })
+            ->when($dateFrom, fn($q, $d) => $q->whereDate('created_at', '>=', $d))
+            ->when($dateTo,   fn($q, $d) => $q->whereDate('created_at', '<=', $d))
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
+
         return view('app.owner-history', [
-            'sales' => Sale::query()
-                ->with('items', 'cashier', 'discount', 'corrections.requester')
-                ->latest()
-                ->paginate(20),
+            'sales'    => $sales,
+            'search'   => $search,
+            'dateFrom' => $dateFrom,
+            'dateTo'   => $dateTo,
         ]);
     }
 
@@ -93,21 +111,51 @@ class AppController extends Controller
 
     public function cashierHistory(): View
     {
+        $search   = request('search');
+        $dateFrom = request('date_from');
+        $dateTo   = request('date_to');
+
+        $sales = Sale::query()
+            ->with('items', 'discount', 'corrections.requester')
+            ->where('user_id', auth()->id())
+            ->when($search, fn($q, $search) => $q->where('invoice_number', 'like', "%{$search}%"))
+            ->when($dateFrom, fn($q, $d) => $q->whereDate('created_at', '>=', $d))
+            ->when($dateTo,   fn($q, $d) => $q->whereDate('created_at', '<=', $d))
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
         return view('app.cashier-history', [
-            'sales' => Sale::query()
-                ->with('items', 'discount', 'corrections.requester')
-                ->where('user_id', auth()->id())
-                ->latest()
-                ->paginate(10),
+            'sales'    => $sales,
+            'search'   => $search,
+            'dateFrom' => $dateFrom,
+            'dateTo'   => $dateTo,
         ]);
     }
 
     public function products(): View
     {
+        $search = request('search');
+
+        $products = Product::query()
+            ->with('store')
+            ->when($search, function ($q, $search) {
+                $q->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('sku', 'like', "%{$search}%")
+                      ->orWhere('category', 'like', "%{$search}%")
+                      ->orWhere('color', 'like', "%{$search}%");
+                });
+            })
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
+
         return view('app.products', [
-            'products' => Product::query()->with('store')->latest()->get(),
-            'stores' => Store::query()->orderBy('name')->get(),
+            'products'   => $products,
+            'stores'     => Store::query()->orderBy('name')->get(),
             'categories' => $this->categories(),
+            'search'     => $search,
         ]);
     }
 
@@ -266,17 +314,47 @@ class AppController extends Controller
     {
         abort_unless(auth()->user()->isOwner(), 403);
 
+        $searchSale    = request('search_sale');
+        $dateFrom      = request('date_from');
+        $dateTo        = request('date_to');
+        $searchProduct = request('search_product');
+
+        $sales = Sale::query()
+            ->with('items', 'cashier', 'store', 'discount', 'corrections.requester')
+            ->when($searchSale, fn($q, $s) => $q->where('invoice_number', 'like', "%{$s}%"))
+            ->when($dateFrom, fn($q, $d) => $q->whereDate('created_at', '>=', $d))
+            ->when($dateTo,   fn($q, $d) => $q->whereDate('created_at', '<=', $d))
+            ->latest()
+            ->paginate(10, ['*'], 'sales_page')
+            ->withQueryString();
+
+        $products = Product::query()
+            ->with('store')
+            ->when($searchProduct, function ($q, $s) {
+                $q->where(function ($q) use ($s) {
+                    $q->where('name', 'like', "%{$s}%")
+                      ->orWhere('sku', 'like', "%{$s}%");
+                });
+            })
+            ->orderBy('stock')
+            ->paginate(10, ['*'], 'products_page')
+            ->withQueryString();
+
         return view('app.reports', [
-            'sales' => Sale::query()->with('items', 'cashier', 'store', 'discount', 'corrections.requester')->latest()->paginate(10, ['*'], 'sales_page'),
-            'products' => Product::query()->with('store')->orderBy('stock')->paginate(10, ['*'], 'products_page'),
-            'summary' => [
+            'sales'         => $sales,
+            'products'      => $products,
+            'summary'       => [
                 'revenue' => Sale::query()->where('status', 'completed')->sum('total'),
-                'profit' => Sale::query()->where('status', 'completed')->sum('profit'),
-                'cogs' => Sale::query()->where('status', 'completed')->sum('cogs'),
-                'items' => (int) \App\Models\SaleItem::query()
-                    ->whereHas('sale', fn ($query) => $query->where('status', 'completed'))
+                'profit'  => Sale::query()->where('status', 'completed')->sum('profit'),
+                'cogs'    => Sale::query()->where('status', 'completed')->sum('cogs'),
+                'items'   => (int) \App\Models\SaleItem::query()
+                    ->whereHas('sale', fn($q) => $q->where('status', 'completed'))
                     ->sum('qty'),
             ],
+            'searchSale'    => $searchSale,
+            'dateFrom'      => $dateFrom,
+            'dateTo'        => $dateTo,
+            'searchProduct' => $searchProduct,
         ]);
     }
 

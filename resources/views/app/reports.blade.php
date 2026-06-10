@@ -8,6 +8,15 @@
 
     <section class="card" style="margin-top:16px">
         <h3>Riwayat Penjualan</h3>
+        <form method="get" action="{{ route('owner.reports') }}" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+            <input class="input" type="search" name="search_sale" value="{{ $searchSale ?? '' }}" placeholder="Cari no. invoice..." style="min-width:180px">
+            <input class="input" type="date" name="date_from" value="{{ $dateFrom ?? '' }}" style="width:140px">
+            <input class="input" type="date" name="date_to" value="{{ $dateTo ?? '' }}" style="width:140px">
+            <button class="button secondary" type="submit">Filter</button>
+            @if($searchSale || $dateFrom || $dateTo)
+                <a href="{{ route('owner.reports') }}" class="button secondary">Reset</a>
+            @endif
+        </form>
         <div class="table-wrap">
             <table>
                 <thead><tr><th>Invoice</th><th>Tanggal</th><th>Kasir</th><th>Item</th><th>Diskon</th><th>Total</th><th>Profit</th><th>Status</th><th>Aksi</th></tr></thead>
@@ -41,6 +50,13 @@
 
     <section class="card" style="margin-top:16px">
         <h3>Laporan Stok</h3>
+        <form method="get" action="{{ route('owner.reports') }}" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+            <input class="input" type="search" name="search_product" value="{{ $searchProduct ?? '' }}" placeholder="Cari nama atau SKU produk..." style="min-width:200px">
+            <button class="button secondary" type="submit">Cari</button>
+            @if($searchProduct)
+                <a href="{{ route('owner.reports') }}" class="button secondary">Reset</a>
+            @endif
+        </form>
         <div class="table-wrap">
             <table>
                 <thead><tr><th>SKU</th><th>Barang</th><th>Kategori</th><th>Toko</th><th>Stok</th><th>Status</th><th>Aksi</th></tr></thead>
