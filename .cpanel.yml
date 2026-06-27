@@ -11,6 +11,7 @@ deployment:
     - /bin/cp -rf $REPOPATH/public/js $DEPLOYPATH/public/
     - /bin/cp -rf $REPOPATH/resources $DEPLOYPATH/
     - /bin/cp -rf $REPOPATH/routes $DEPLOYPATH/
+    - /bin/rm -rf $DEPLOYPATH/storage/framework/views/*
     - /usr/local/bin/php $DEPLOYPATH/artisan config:clear
     - /usr/local/bin/php $DEPLOYPATH/artisan config:cache
     - /usr/local/bin/php $DEPLOYPATH/artisan route:cache
