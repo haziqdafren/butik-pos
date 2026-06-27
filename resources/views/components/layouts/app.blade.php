@@ -121,7 +121,7 @@
             <div style="font-size:13px;color:#67727f;margin-bottom:24px;">Tindakan ini tidak dapat dibatalkan.</div>
             <div style="display:flex;gap:10px;justify-content:center;">
                 <button onclick="closeConfirmModal()" style="flex:1;padding:10px 0;border:1px solid #e2e8f0;border-radius:8px;background:#fff;font-size:14px;font-weight:600;color:#1d242c;cursor:pointer;">Batal</button>
-                <button id="confirmModalOk" style="flex:1;padding:10px 0;border:0;border-radius:8px;background:#b2472f;color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Ya, Hapus</button>
+                <button onclick="doConfirmDelete()" style="flex:1;padding:10px 0;border:0;border-radius:8px;background:#b2472f;color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Ya, Hapus</button>
             </div>
         </div>
     </div>
@@ -217,20 +217,26 @@ function confirmDelete(form, msg) {
     var modal = document.getElementById('confirmModal');
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
-    document.getElementById('confirmModalOk').focus();
-    return false; // always block native submit
+    return false;
+}
+function doConfirmDelete() {
+    if (_confirmForm) {
+        var f = _confirmForm;
+        closeConfirmModal();
+        // Use a hidden submit button to bypass onsubmit
+        var btn = document.createElement('input');
+        btn.type = 'submit';
+        btn.style.display = 'none';
+        f.appendChild(btn);
+        f.onsubmit = null;
+        btn.click();
+    }
 }
 function closeConfirmModal() {
     document.getElementById('confirmModal').style.display = 'none';
     document.body.style.overflow = '';
     _confirmForm = null;
 }
-document.getElementById('confirmModalOk').addEventListener('click', function() {
-    if (_confirmForm) {
-        closeConfirmModal();
-        _confirmForm.submit();
-    }
-});
 document.getElementById('confirmModal').addEventListener('click', function(e) {
     if (e.target === this) closeConfirmModal();
 });
