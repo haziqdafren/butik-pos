@@ -22,10 +22,9 @@ class AppController extends Controller
     {
         abort_unless(auth()->user()->isOwner(), 403);
 
-        $sales = Sale::query()->with('cashier', 'store')->latest()->get();
-        $lowStock = Product::query()->where('stock', '<=', 1)->orderBy('stock')->get();
+        $lowStock = Product::query()->where('stock', '<=', 3)->orderBy('stock')->get();
 
-        // Build 7-day chart data: last 7 days including today, oldest first
+        // Build 7-day chart data
         $chartData = collect(range(6, 0))->map(function (int $daysAgo): array {
             $date = now()->subDays($daysAgo)->startOfDay();
             return [
@@ -39,7 +38,7 @@ class AppController extends Controller
         Sale::query()
             ->where('status', 'completed')
             ->whereBetween('created_at', [now()->subDays(6)->startOfDay(), now()->endOfDay()])
-            ->get()
+            ->get(['id', 'total', 'created_at'])
             ->groupBy(fn(Sale $s) => $s->created_at->toDateString())
             ->each(function ($daySales, string $date) use (&$chartData): void {
                 if ($chartData->has($date)) {
@@ -49,24 +48,33 @@ class AppController extends Controller
                 }
             });
 
-        $chartData  = $chartData->values()->toArray();
-        $chartMax   = max(1, ...array_column($chartData, 'total'));
+        $chartData = $chartData->values()->toArray();
+        $chartMax  = max(1, ...array_column($chartData, 'total'));
+
+        // Aggregates via DB — no full collection load
+        $summary = [
+            'revenue'      => Sale::query()->where('status', 'completed')->sum('total'),
+            'profit'       => Sale::query()->where('status', 'completed')->sum('profit'),
+            'discounts'    => Sale::query()->where('status', 'completed')->sum('discount_amount'),
+            'transactions' => Sale::query()->where('status', 'completed')->count(),
+        ];
+
+        $recentSales = Sale::query()
+            ->with('cashier:id,name')
+            ->latest()
+            ->limit(10)
+            ->get(['id', 'invoice_number', 'user_id', 'total', 'status', 'created_at']);
 
         return view('app.owner-dashboard', [
-            'sales'           => $sales,
+            'recentSales'     => $recentSales,
             'lowStock'        => $lowStock,
-            'recentDiscounts' => DiscountApproval::query()->with('requester')->latest()->take(8)->get(),
-            'notifications'   => Notification::query()->whereNull('read_at')->latest()->take(20)->get(),
-            'unreadCount'     => Notification::query()->whereNull('read_at')->count(),
-            'products'        => Product::query()->with('store')->orderBy('name')->get(),
+            'recentDiscounts' => DiscountApproval::query()->with('requester:id,name')->latest()->take(8)->get(),
+            'notifications'   => ($notifications = Notification::query()->whereNull('read_at')->latest()->take(20)->get()),
+            'unreadCount'     => $notifications->count(),
+            'products'        => Product::query()->with('store:id,name')->orderBy('name')->get(['id', 'name', 'stock', 'store_id']),
             'productsCount'   => Product::query()->count(),
             'cashiersCount'   => User::query()->where('role', 'cashier')->count(),
-            'summary'         => [
-                'revenue'      => $sales->where('status', 'completed')->sum('total'),
-                'profit'       => $sales->where('status', 'completed')->sum('profit'),
-                'discounts'    => $sales->where('status', 'completed')->sum('discount_amount'),
-                'transactions' => $sales->where('status', 'completed')->count(),
-            ],
+            'summary'         => $summary,
             'chartData'       => $chartData,
             'chartMax'        => $chartMax,
         ]);
@@ -105,7 +113,10 @@ class AppController extends Controller
     public function pos(): View
     {
         return view('app.pos', [
-            'products' => Product::query()->with('store')->orderBy('name')->get(),
+            'products' => Product::query()
+                ->where('stock', '>', 0)
+                ->orderBy('name')
+                ->get(['id', 'name', 'sku', 'category', 'color', 'size', 'selling_price', 'cost_price', 'stock', 'store_id']),
         ]);
     }
 
@@ -148,7 +159,7 @@ class AppController extends Controller
                 });
             })
             ->latest()
-            ->paginate(20)
+            ->paginate(25)
             ->withQueryString();
 
         return view('app.products', [
@@ -209,24 +220,6 @@ class AppController extends Controller
         $count = count($rows);
 
         return back()->with('status', "{$count} barang berhasil ditambahkan.");
-    }
-
-    public function purchase(Request $request): RedirectResponse
-    {
-        $data = $request->validate([
-            'product_id' => ['required', 'exists:products,id'],
-            'qty' => ['required', 'integer', 'min:1'],
-            'unit_cost' => ['required', 'integer', 'min:0'],
-            'supplier' => ['nullable', 'string', 'max:120'],
-            'notes' => ['nullable', 'string', 'max:500'],
-        ]);
-
-        $product = Product::query()->findOrFail($data['product_id']);
-        $product->increment('stock', $data['qty']);
-        $product->update(['cost_price' => $data['unit_cost'], 'supplier' => $data['supplier'] ?? $product->supplier]);
-        $product->purchases()->create($data + ['user_id' => auth()->id()]);
-
-        return back()->with('status', 'Pembelian/restock berhasil dicatat.');
     }
 
     public function checkout(Request $request, PosService $service): RedirectResponse
@@ -314,10 +307,9 @@ class AppController extends Controller
     {
         abort_unless(auth()->user()->isOwner(), 403);
 
-        $searchSale    = request('search_sale');
-        $dateFrom      = request('date_from');
-        $dateTo        = request('date_to');
-        $searchProduct = request('search_product');
+        $searchSale = request('search_sale');
+        $dateFrom   = request('date_from');
+        $dateTo     = request('date_to');
 
         $sales = Sale::query()
             ->with('items', 'cashier', 'store', 'discount', 'corrections.requester')
@@ -328,33 +320,20 @@ class AppController extends Controller
             ->paginate(10, ['*'], 'sales_page')
             ->withQueryString();
 
-        $products = Product::query()
-            ->with('store')
-            ->when($searchProduct, function ($q, $s) {
-                $q->where(function ($q) use ($s) {
-                    $q->where('name', 'like', "%{$s}%")
-                      ->orWhere('sku', 'like', "%{$s}%");
-                });
-            })
-            ->orderBy('stock')
-            ->paginate(10, ['*'], 'products_page')
-            ->withQueryString();
-
         return view('app.reports', [
-            'sales'         => $sales,
-            'products'      => $products,
-            'summary'       => [
+            'sales'      => $sales,
+            'summary'    => [
                 'revenue' => Sale::query()->where('status', 'completed')->sum('total'),
                 'profit'  => Sale::query()->where('status', 'completed')->sum('profit'),
                 'cogs'    => Sale::query()->where('status', 'completed')->sum('cogs'),
                 'items'   => (int) \App\Models\SaleItem::query()
-                    ->whereHas('sale', fn($q) => $q->where('status', 'completed'))
-                    ->sum('qty'),
+                    ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+                    ->where('sales.status', 'completed')
+                    ->sum('sale_items.qty'),
             ],
-            'searchSale'    => $searchSale,
-            'dateFrom'      => $dateFrom,
-            'dateTo'        => $dateTo,
-            'searchProduct' => $searchProduct,
+            'searchSale' => $searchSale,
+            'dateFrom'   => $dateFrom,
+            'dateTo'     => $dateTo,
         ]);
     }
 
@@ -377,8 +356,8 @@ class AppController extends Controller
             'store_phone'        => ['nullable', 'string', 'max:20'],
             'receipt_footer'     => ['nullable', 'string', 'max:255'],
             'owner_email'        => ['nullable', 'email', 'max:120'],
-            'store_open_time'    => ['nullable', 'regex:/^\d{2}:\d{2}$/'],
-            'store_close_time'   => ['nullable', 'regex:/^\d{2}:\d{2}$/'],
+            'store_open_time'    => ['nullable', 'regex:/^([01][0-9]|2[0-3]):([0-5][0-9])$/'],
+            'store_close_time'   => ['nullable', 'regex:/^([01][0-9]|2[0-3]):([0-5][0-9])$/'],
             'auto_print_receipt' => ['nullable', 'in:0,1'],
         ]);
 
@@ -404,6 +383,141 @@ class AppController extends Controller
             'settings'  => $settings->all(),
             'autoPrint' => !$request->boolean('reprint') && $settings->getBool('auto_print_receipt', true),
         ]);
+    }
+
+    public function updateProduct(Request $request, Product $product): RedirectResponse
+    {
+        abort_unless(auth()->user()->isOwner(), 403);
+
+        $data = $request->validate([
+            'name'          => ['required', 'string', 'max:120'],
+            'category'      => ['required', 'string'],
+            'color'         => ['nullable', 'string', 'max:60'],
+            'size'          => ['nullable', 'string', 'max:40'],
+            'supplier'      => ['nullable', 'string', 'max:120'],
+            'cost_price'    => ['required', 'integer', 'min:0'],
+            'selling_price' => ['required', 'integer', 'min:0'],
+            'stock'         => ['required', 'integer', 'min:0'],
+            'store_id'      => ['required', 'exists:stores,id'],
+        ]);
+
+        $product->update($data);
+
+        return redirect()->route('products.index')->with('status', "Barang {$product->name} berhasil diperbarui.");
+    }
+
+    public function destroyProduct(Product $product): RedirectResponse
+    {
+        abort_unless(auth()->user()->isOwner(), 403);
+
+        try {
+            $product->delete();
+        } catch (\Illuminate\Database\QueryException $e) {
+            return redirect()->route('products.index')
+                ->with('error', "Barang {$product->name} tidak dapat dihapus karena masih ada data transaksi terkait.");
+        }
+
+        return redirect()->route('products.index')->with('status', 'Barang berhasil dihapus.');
+    }
+
+    public function stockReport(): View
+    {
+        abort_unless(auth()->user()->isOwner(), 403);
+
+        $search = request('search_product');
+
+        $products = Product::query()
+            ->with('store:id,name')
+            ->when($search, function ($q, $s) {
+                $q->where(function ($q) use ($s) {
+                    $q->where('name', 'like', "%{$s}%")
+                      ->orWhere('sku', 'like', "%{$s}%")
+                      ->orWhere('category', 'like', "%{$s}%");
+                });
+            })
+            ->orderBy('stock')
+            ->paginate(30)
+            ->withQueryString();
+
+        $stockSummary = [
+            'total'  => Product::query()->count(),
+            'habis'  => Product::query()->where('stock', 0)->count(),
+            'kritis' => Product::query()->where('stock', '>', 0)->where('stock', '<=', 3)->count(),
+            'aman'   => Product::query()->where('stock', '>', 3)->count(),
+        ];
+
+        return view('app.stock-report', [
+            'products'      => $products,
+            'searchProduct' => $search,
+            'stockSummary'  => $stockSummary,
+        ]);
+    }
+
+    public function users(): View
+    {
+        abort_unless(auth()->user()->isOwner(), 403);
+
+        $users = User::query()
+            ->with('store')
+            ->orderBy('role')
+            ->orderBy('name')
+            ->get();
+
+        $stores = Store::query()->orderBy('name')->get();
+
+        return view('app.users', [
+            'users'  => $users,
+            'stores' => $stores,
+        ]);
+    }
+
+    public function storeUser(Request $request): RedirectResponse
+    {
+        abort_unless(auth()->user()->isOwner(), 403);
+
+        $data = $request->validate([
+            'name'     => ['required', 'string', 'max:120'],
+            'email'    => ['required', 'email', 'max:120', 'unique:users,email'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'role'     => ['required', 'in:owner,cashier'],
+            'store_id' => ['required', 'exists:stores,id'],
+        ]);
+
+        User::query()->create([
+            'name'     => $data['name'],
+            'email'    => $data['email'],
+            'password' => \Illuminate\Support\Facades\Hash::make($data['password']),
+            'role'     => $data['role'],
+            'store_id' => $data['store_id'],
+        ]);
+
+        return redirect()->route('owner.users')->with('status', "Pengguna {$data['name']} berhasil dibuat.");
+    }
+
+    public function changeUserPassword(Request $request, User $user): RedirectResponse
+    {
+        abort_unless(auth()->user()->isOwner(), 403);
+
+        $data = $request->validate([
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        $user->update([
+            'password' => \Illuminate\Support\Facades\Hash::make($data['password']),
+        ]);
+
+        return redirect()->route('owner.users')->with('status', "Password {$user->name} berhasil diubah.");
+    }
+
+    public function destroyUser(User $user): RedirectResponse
+    {
+        abort_unless(auth()->user()->isOwner(), 403);
+        abort_if($user->id === auth()->id(), 403, 'Tidak dapat menghapus akun sendiri.');
+
+        $name = $user->name;
+        $user->delete();
+
+        return redirect()->route('owner.users')->with('status', "Pengguna {$name} berhasil dihapus.");
     }
 
     private function categories(): array

@@ -3,10 +3,10 @@
         <div class="toolbar" style="justify-content:space-between; align-items:center; margin-bottom:12px">
             <h3 style="margin:0">History Transaksi</h3>
         </div>
-        <form method="get" action="{{ route('owner.history') }}" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
-            <input class="input" type="search" name="search" value="{{ $search ?? '' }}" placeholder="Cari invoice atau kasir..." style="min-width:200px">
-            <input class="input" type="date" name="date_from" value="{{ $dateFrom ?? '' }}" style="width:140px">
-            <input class="input" type="date" name="date_to" value="{{ $dateTo ?? '' }}" style="width:140px">
+        <form method="get" action="{{ route('owner.history') }}" class="filter-bar">
+            <input class="input" type="search" name="search" value="{{ $search ?? '' }}" placeholder="Cari invoice atau kasir...">
+            <input class="input" type="date" name="date_from" value="{{ $dateFrom ?? '' }}">
+            <input class="input" type="date" name="date_to" value="{{ $dateTo ?? '' }}">
             <button class="button secondary" type="submit">Filter</button>
             @if($search || $dateFrom || $dateTo)
                 <a href="{{ route('owner.history') }}" class="button secondary">Reset</a>
@@ -16,16 +16,16 @@
         <div class="table-wrap">
             <table>
                 <thead>
-                <tr><th>Invoice</th><th>Kasir</th><th>Waktu</th><th>Item</th><th>Diskon</th><th>Total</th><th>Status</th><th>Aksi</th></tr>
+                <tr><th>Invoice</th><th class="col-hide-mobile">Kasir</th><th class="col-hide-mobile">Waktu</th><th class="col-hide-mobile">Item</th><th class="col-hide-mobile">Diskon</th><th>Total</th><th>Status</th><th>Aksi</th></tr>
                 </thead>
                 <tbody>
                 @forelse($sales as $sale)
                     <tr>
                         <td>{{ $sale->invoice_number }}</td>
-                        <td>{{ $sale->cashier?->name ?? '-' }}</td>
-                        <td>{{ $sale->created_at->format('d/m/Y H:i') }}</td>
-                        <td>{{ $sale->items->sum('qty') }}</td>
-                        <td>Rp {{ number_format($sale->discount_amount, 0, ',', '.') }}</td>
+                        <td class="col-hide-mobile">{{ $sale->cashier?->name ?? '-' }}</td>
+                        <td class="col-hide-mobile">{{ $sale->created_at->format('d/m/Y H:i') }}</td>
+                        <td class="col-hide-mobile">{{ $sale->items->sum('qty') }}</td>
+                        <td class="col-hide-mobile">Rp {{ number_format($sale->discount_amount, 0, ',', '.') }}</td>
                         <td class="money">Rp {{ number_format($sale->total, 0, ',', '.') }}</td>
                         <td>
                             @if($sale->status === 'voided')

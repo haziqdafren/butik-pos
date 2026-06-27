@@ -14,12 +14,16 @@ class DailyReportMail extends Mailable
 
     public function __construct(
         public readonly string $ownerName,
+        public readonly string $storeName,
         public readonly string $date,
         public readonly int $totalTransactions,
         public readonly int $revenue,
         public readonly int $profit,
+        public readonly array $categoryBreakdown,
         public readonly array $voids,
+        public readonly int $totalVoids,
         public readonly array $lowStocks,
+        public readonly int $totalLowStocks,
     ) {}
 
     public function envelope(): Envelope

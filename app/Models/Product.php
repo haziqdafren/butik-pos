@@ -45,7 +45,7 @@ class Product extends Model
     public function stockStatus(): string
     {
         if ($this->stock === 0) return 'out';
-        if ($this->stock === 1) return 'low';
+        if ($this->stock <= 3) return 'low';
         return 'ok';
     }
 

@@ -107,13 +107,14 @@ function initRestockForm() {
     function updateShippingFromProduct() {
         if (!productEl || !shippingEl) return;
         const category = getCategoryForProduct(productEl.value);
-        shippingEl.value = shippingCostForCategory(category);
+        const autoVal  = shippingCostForCategory(category);
+        if (shippingEl.setRaw) shippingEl.setRaw(autoVal); else shippingEl.value = autoVal;
         recalculate();
     }
 
     function recalculate() {
-        const cost     = Number(costEl ? costEl.value : 0) || 0;
-        const shipping = Number(shippingEl ? shippingEl.value : 0) || 0;
+        const cost     = costEl     ? (costEl.getRaw     ? costEl.getRaw()     : Number(costEl.value)     || 0) : 0;
+        const shipping = shippingEl ? (shippingEl.getRaw ? shippingEl.getRaw() : Number(shippingEl.value) || 0) : 0;
         const selling  = calculateSellingPrice(cost, shipping);
         const discMax  = Math.round(selling * 0.1);
 
@@ -153,7 +154,71 @@ function initRestockForm() {
     if (shippingEl) shippingEl.addEventListener('input', recalculate);
 }
 
+// --- Bulk Product Form (/barang — bulk table) --------------------------------
+
+/**
+ * Attach auto-pricing listeners to a single bulk table row.
+ * Called on page load for each existing row, and from addProductRow()
+ * whenever a new row is cloned into the table.
+ */
+function initBulkRow(row) {
+    var categoryEl = row.querySelector('[data-bulk-category]');
+    var costEl     = row.querySelector('[data-bulk-cost]');
+    var shippingEl = row.querySelector('[data-bulk-shipping]');
+    var sellingEl  = row.querySelector('[data-bulk-selling]');
+    var previewEl  = row.querySelector('[data-bulk-price-preview]');
+
+    if (!costEl || !sellingEl) return;
+
+    function updateShippingFromCategory() {
+        if (!categoryEl || !shippingEl) return;
+        var autoVal = shippingCostForCategory(categoryEl.value);
+        if (shippingEl.setRaw) shippingEl.setRaw(autoVal); else shippingEl.value = autoVal;
+        recalculate();
+    }
+
+    function recalculate() {
+        var cost     = costEl     ? (costEl.getRaw     ? costEl.getRaw()     : Number(costEl.value)     || 0) : 0;
+        var shipping = shippingEl ? (shippingEl.getRaw ? shippingEl.getRaw() : Number(shippingEl.value) || 0) : 0;
+        var selling  = calculateSellingPrice(cost, shipping);
+
+        sellingEl.value = selling > 0 ? selling : '';
+
+        if (previewEl) {
+            if (cost > 0) {
+                var total = cost + shipping;
+                previewEl.textContent =
+                    'Rp\u00a0' + formatRupiahPlain(cost) +
+                    ' + ' + formatRupiahPlain(shipping) +
+                    ' = ' + formatRupiahPlain(total) +
+                    ' \u00d71,5 \u2192 Rp\u00a0' + formatRupiahPlain(selling);
+            } else {
+                previewEl.textContent = '';
+            }
+        }
+    }
+
+    if (categoryEl) categoryEl.addEventListener('change', updateShippingFromCategory);
+    if (costEl)     costEl.addEventListener('input', recalculate);
+    if (shippingEl) shippingEl.addEventListener('input', recalculate);
+
+    // Initialise: set shipping from category, then calculate
+    updateShippingFromCategory();
+}
+
+function initBulkProductForm() {
+    var tbody = document.getElementById('bulk-tbody');
+    if (!tbody) return;
+    tbody.querySelectorAll('tr').forEach(function (row) {
+        initBulkRow(row);
+    });
+}
+
+// Export so addProductRow() in pos.js can call initBulkRow on cloned rows
+window.initBulkRow = initBulkRow;
+
 document.addEventListener('DOMContentLoaded', function () {
     initProductForm();
     initRestockForm();
+    initBulkProductForm();
 });

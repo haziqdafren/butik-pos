@@ -2,8 +2,12 @@
     <div class="grid-4">
         <div class="card metric hot"><small>Total Pendapatan</small><strong>Rp {{ number_format($summary['revenue'], 0, ',', '.') }}</strong></div>
         <div class="card metric good"><small>Profit Bersih</small><strong>Rp {{ number_format($summary['profit'], 0, ',', '.') }}</strong></div>
-        <div class="card metric warn"><small>Diskon Diberikan</small><strong>Rp {{ number_format($summary['discounts'], 0, ',', '.') }}</strong></div>
-        <div class="card metric info"><small>Transaksi</small><strong>{{ $summary['transactions'] }}</strong></div>
+        <div class="card metric warn"><small>Total Transaksi</small><strong>{{ $summary['transactions'] }}</strong></div>
+        <div class="card metric info"><small>Total Produk</small><strong>{{ $productsCount }}</strong></div>
+    </div>
+    <div class="grid-2" style="margin-top:12px">
+        <div class="card metric"><small>Diskon Diberikan</small><strong>Rp {{ number_format($summary['discounts'], 0, ',', '.') }}</strong></div>
+        <div class="card metric"><small>Jumlah Kasir</small><strong>{{ $cashiersCount }} orang</strong></div>
     </div>
 
     {{-- Panel Notifikasi --}}
@@ -72,9 +76,9 @@
                 <table>
                     <thead><tr><th>Invoice</th><th>Kasir</th><th>Total</th><th>Status</th></tr></thead>
                     <tbody>
-                    @forelse($sales->take(8) as $sale)
+                    @forelse($recentSales as $sale)
                         <tr>
-                            <td>{{ $sale->invoice_number }}</td>
+                            <td><span class="invoice-cell">{{ $sale->invoice_number }}</span></td>
                             <td>{{ $sale->cashier->name }}</td>
                             <td class="money">Rp {{ number_format($sale->total, 0, ',', '.') }}</td>
                             <td>
@@ -95,12 +99,13 @@
         <div class="card">
             <h3>Stok Perlu Perhatian</h3>
             @forelse($lowStock as $product)
-                <div class="toolbar" style="justify-content:space-between">
-                    <div>
+                <div class="stock-row">
+                    <div class="stock-row-info">
                         <strong>{{ $product->name }}</strong>
-                        <div class="muted">{{ $product->sku }} · {{ $product->store->name }} · Supplier: {{ $product->supplier ?: '-' }}</div>
+                        <small class="sku-line">{{ $product->sku }} · {{ $product->store->name }}</small>
+                        <small>Supplier: {{ $product->supplier ?: '-' }}</small>
                     </div>
-                    <span class="badge {{ $product->stockBadgeClass() }}">{{ $product->stockLabel() }}</span>
+                    <span class="badge {{ $product->stockBadgeClass() }}" style="flex-shrink:0">{{ $product->stockLabel() }}</span>
                 </div>
             @empty
                 <p class="muted">Semua stok masih aman.</p>
@@ -130,7 +135,7 @@
                 </div>
                 <div class="field">
                     <label>Ongkos Kirim/pcs</label>
-                    <input class="input" type="number" data-restock-shipping min="0" placeholder="Otomatis dari kategori produk">
+                    <input class="input" type="number" data-restock-shipping data-rupiah min="0" placeholder="Otomatis dari kategori produk">
                     <small class="muted">Dihitung otomatis saat produk dipilih. Bisa diubah.</small>
                 </div>
                 <div class="field">

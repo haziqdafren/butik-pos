@@ -7,11 +7,14 @@
     </div>
 
     <section class="card" style="margin-top:16px">
-        <h3>Riwayat Penjualan</h3>
-        <form method="get" action="{{ route('owner.reports') }}" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
-            <input class="input" type="search" name="search_sale" value="{{ $searchSale ?? '' }}" placeholder="Cari no. invoice..." style="min-width:180px">
-            <input class="input" type="date" name="date_from" value="{{ $dateFrom ?? '' }}" style="width:140px">
-            <input class="input" type="date" name="date_to" value="{{ $dateTo ?? '' }}" style="width:140px">
+        <div class="toolbar" style="justify-content:space-between;align-items:center;margin-bottom:12px">
+            <h3 style="margin:0">Riwayat Penjualan</h3>
+            <a href="{{ route('owner.stock-report') }}" class="button secondary">Laporan Stok →</a>
+        </div>
+        <form method="get" action="{{ route('owner.reports') }}" class="filter-bar">
+            <input class="input" type="search" name="search_sale" value="{{ $searchSale ?? '' }}" placeholder="Cari no. invoice...">
+            <input class="input" type="date" name="date_from" value="{{ $dateFrom ?? '' }}">
+            <input class="input" type="date" name="date_to" value="{{ $dateTo ?? '' }}">
             <button class="button secondary" type="submit">Filter</button>
             @if($searchSale || $dateFrom || $dateTo)
                 <a href="{{ route('owner.reports') }}" class="button secondary">Reset</a>
@@ -19,17 +22,17 @@
         </form>
         <div class="table-wrap">
             <table>
-                <thead><tr><th>Invoice</th><th>Tanggal</th><th>Kasir</th><th>Item</th><th>Diskon</th><th>Total</th><th>Profit</th><th>Status</th><th>Aksi</th></tr></thead>
+                <thead><tr><th>Invoice</th><th class="col-hide-mobile">Tanggal</th><th class="col-hide-mobile">Kasir</th><th class="col-hide-mobile">Item</th><th class="col-hide-mobile">Diskon</th><th>Total</th><th class="col-hide-mobile">Profit</th><th>Status</th><th>Aksi</th></tr></thead>
                 <tbody>
                 @forelse($sales as $sale)
                     <tr>
                         <td>{{ $sale->invoice_number }}</td>
-                        <td>{{ $sale->created_at->format('d/m/Y H:i') }}</td>
-                        <td>{{ $sale->cashier->name }}</td>
-                        <td>{{ $sale->items->sum('qty') }}</td>
-                        <td>Rp {{ number_format($sale->discount_amount, 0, ',', '.') }}</td>
+                        <td class="col-hide-mobile">{{ $sale->created_at->format('d/m/Y H:i') }}</td>
+                        <td class="col-hide-mobile">{{ $sale->cashier->name }}</td>
+                        <td class="col-hide-mobile">{{ $sale->items->sum('qty') }}</td>
+                        <td class="col-hide-mobile">Rp {{ number_format($sale->discount_amount, 0, ',', '.') }}</td>
                         <td class="money">Rp {{ number_format($sale->total, 0, ',', '.') }}</td>
-                        <td class="money {{ $sale->status === 'voided' ? 'muted' : '' }}">
+                        <td class="money col-hide-mobile {{ $sale->status === 'voided' ? 'muted' : '' }}">
                             {{ $sale->status === 'voided' ? '-' : 'Rp '.number_format($sale->profit, 0, ',', '.') }}
                         </td>
                         <td>
@@ -46,36 +49,6 @@
             </table>
         </div>
         <x-pager :paginator="$sales" />
-    </section>
-
-    <section class="card" style="margin-top:16px">
-        <h3>Laporan Stok</h3>
-        <form method="get" action="{{ route('owner.reports') }}" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
-            <input class="input" type="search" name="search_product" value="{{ $searchProduct ?? '' }}" placeholder="Cari nama atau SKU produk..." style="min-width:200px">
-            <button class="button secondary" type="submit">Cari</button>
-            @if($searchProduct)
-                <a href="{{ route('owner.reports') }}" class="button secondary">Reset</a>
-            @endif
-        </form>
-        <div class="table-wrap">
-            <table>
-                <thead><tr><th>SKU</th><th>Barang</th><th>Kategori</th><th>Toko</th><th>Stok</th><th>Status</th><th>Aksi</th></tr></thead>
-                <tbody>
-                @foreach($products as $product)
-                    <tr>
-                        <td>{{ $product->sku }}</td>
-                        <td>{{ $product->name }}</td>
-                        <td>{{ $product->category }}</td>
-                        <td>{{ $product->store->name }}</td>
-                        <td>{{ $product->stock }}</td>
-                        <td><span class="badge {{ $product->stockBadgeClass() }}">{{ $product->stockLabel() }}</span></td>
-                        <td><label class="button secondary mini" for="owner-product-detail-{{ $product->id }}">Detail</label></td>
-                    </tr>
-                @endforeach
-                </tbody>
-            </table>
-        </div>
-        <x-pager :paginator="$products" />
     </section>
 
     @foreach($sales as $sale)
@@ -123,31 +96,6 @@
                     @if($sale->discount)
                         <p style="margin-top:8px"><strong>Catatan diskon:</strong> {{ $sale->discount->reason }}</p>
                     @endif
-                </div>
-            </div>
-        </div>
-    @endforeach
-
-    @foreach($products as $product)
-        <input class="modal-toggle" type="checkbox" id="owner-product-detail-{{ $product->id }}">
-        <div class="modal">
-            <div class="modal-card">
-                <div class="modal-head">
-                    <h3>{{ $product->name }}</h3>
-                    <label class="button secondary mini" for="owner-product-detail-{{ $product->id }}">Tutup</label>
-                </div>
-                <div class="modal-body">
-                    <div class="detail-grid">
-                        <div class="detail-box"><small>SKU</small><strong>{{ $product->sku }}</strong></div>
-                        <div class="detail-box"><small>Kategori</small><strong>{{ $product->category }}</strong></div>
-                        <div class="detail-box"><small>Toko</small><strong>{{ $product->store->name }}</strong></div>
-                        <div class="detail-box"><small>Warna</small><strong>{{ $product->color ?: '-' }}</strong></div>
-                        <div class="detail-box"><small>Ukuran</small><strong>{{ $product->size ?: '-' }}</strong></div>
-                        <div class="detail-box"><small>Supplier</small><strong>{{ $product->supplier ?: '-' }}</strong></div>
-                        <div class="detail-box"><small>Harga Modal</small><strong>Rp {{ number_format($product->cost_price, 0, ',', '.') }}</strong></div>
-                        <div class="detail-box"><small>Harga Jual</small><strong>Rp {{ number_format($product->selling_price, 0, ',', '.') }}</strong></div>
-                        <div class="detail-box"><small>Stok Sekarang</small><strong>{{ $product->stock }} pcs</strong></div>
-                    </div>
                 </div>
             </div>
         </div>

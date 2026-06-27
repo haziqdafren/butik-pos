@@ -140,7 +140,7 @@
                     @endif
                 </td>
                 <td class="col-qty">{{ $item->qty }}x</td>
-                <td class="col-price">{{ number_format($item->unit_price, 0, ',', '.') }}</td>
+                <td class="col-price">Rp {{ number_format($item->unit_price, 0, ',', '.') }}</td>
             </tr>
             @if($item->qty > 1)
                 <tr>
@@ -193,8 +193,15 @@
 
 <div class="no-print">
     <button class="btn btn-print" onclick="window.print()">Cetak Struk</button>
-    <button class="btn btn-close" onclick="window.close()">Tutup</button>
+    <button class="btn btn-close" id="btnClose" onclick="window.close()">Tutup</button>
 </div>
+<script>
+    // Hide close button on mobile — window.close() is blocked by iOS/Android browsers
+    if (/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
+        var bc = document.getElementById('btnClose');
+        if (bc) bc.style.display = 'none';
+    }
+</script>
 
 <script>
     var autoPrint = {{ $autoPrint ? 'true' : 'false' }};

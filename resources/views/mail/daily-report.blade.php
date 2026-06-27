@@ -1,75 +1,159 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <style>
-        body { font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px; }
-        h1 { color: #1e3a5f; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; }
-        h2 { color: #374151; font-size: 16px; margin-top: 24px; margin-bottom: 8px; }
-        .box { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 16px; margin-bottom: 16px; }
-        .row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #f3f4f6; }
-        .row:last-child { border-bottom: none; }
-        .label { color: #6b7280; }
-        .value { font-weight: bold; }
-        .void-item { background: #fef2f2; border-left: 4px solid #ef4444; padding: 8px 12px; margin: 6px 0; border-radius: 0 4px 4px 0; }
-        .stock-item { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 8px 12px; margin: 6px 0; border-radius: 0 4px 4px 0; }
-        .ok { color: #059669; font-weight: bold; }
-        .footer { color: #9ca3af; font-size: 12px; margin-top: 32px; border-top: 1px solid #e5e7eb; padding-top: 12px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Laporan Harian &mdash; {{ $date }}</title>
 </head>
-<body>
-    <h1>Laporan Harian Butik</h1>
-    <p>Halo <strong>{{ $ownerName }}</strong>,</p>
-    <p>Berikut ringkasan kegiatan toko hari ini, <strong>{{ $date }}</strong>:</p>
+<body style="margin:0;padding:0;background:#f4f4f2;font-family:Arial,sans-serif;font-size:14px;color:#1d242c;">
 
-    <h2>Penjualan Hari Ini</h2>
-    <div class="box">
-        @if($totalTransactions === 0)
-            <p style="color:#6b7280;margin:0">Tidak ada transaksi hari ini.</p>
-        @else
-            <div class="row">
-                <span class="label">Total Transaksi</span>
-                <span class="value">{{ $totalTransactions }} kali</span>
-            </div>
-            <div class="row">
-                <span class="label">Pemasukan</span>
-                <span class="value">Rp {{ number_format($revenue, 0, ',', '.') }}</span>
-            </div>
-            <div class="row">
-                <span class="label">Keuntungan Bersih</span>
-                <span class="value">Rp {{ number_format($profit, 0, ',', '.') }}</span>
-            </div>
-        @endif
-    </div>
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4f4f2;padding:32px 16px;">
+  <tr>
+    <td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;width:100%;background:#ffffff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.07);">
 
-    <h2>Pembatalan Transaksi Hari Ini</h2>
-    @if(count($voids) === 0)
-        <p class="ok">Tidak ada transaksi yang dibatalkan hari ini.</p>
-    @else
-        @foreach($voids as $void)
-            <div class="void-item">
-                <strong>{{ $void['invoice'] }}</strong> dibatalkan oleh {{ $void['cashier'] }}<br>
-                <span style="color:#6b7280">Alasan: {{ $void['reason'] }}</span>
-            </div>
-        @endforeach
-    @endif
+        {{-- Header --}}
+        <tr>
+          <td style="background:#b2472f;padding:28px 32px;border-radius:12px 12px 0 0;">
+            <div style="font-size:20px;font-weight:700;color:#ffffff;margin-bottom:4px;">{{ $storeName }}</div>
+            <div style="font-size:13px;color:rgba(255,255,255,0.82);">Laporan Harian &mdash; {{ $date }}</div>
+          </td>
+        </tr>
 
-    <h2>Barang Stok Menipis</h2>
-    @if(count($lowStocks) === 0)
-        <p class="ok">Semua stok masih aman. Tidak perlu restock hari ini.</p>
-    @else
-        @foreach($lowStocks as $item)
-            <div class="stock-item">
-                <strong>{{ $item['name'] }}</strong> — sisa <strong>{{ $item['stock'] }} pcs</strong><br>
-                <span style="color:#6b7280">Supplier: {{ $item['supplier'] ?: 'belum diisi' }}</span>
-            </div>
-        @endforeach
-        <p style="color:#92400e">Segera lakukan restock melalui menu <em>Dashboard Owner → Restock Barang</em>.</p>
-    @endif
+        {{-- Body --}}
+        <tr>
+          <td style="padding:28px 32px;">
 
-    <div class="footer">
-        <p>Email ini dikirim otomatis setiap hari pukul 20:00 oleh Sistem Butik POS.<br>
-        Jika ada pertanyaan, hubungi admin toko Anda.</p>
-    </div>
+            <p style="margin:0 0 24px;font-size:15px;">Halo <strong>{{ $ownerName }}</strong>, berikut rekap transaksi hari ini.</p>
+
+            {{-- ── Section 1: Ringkasan ── --}}
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#67727f;border-bottom:2px solid #b2472f;padding-bottom:6px;margin-bottom:14px;">
+              Ringkasan Hari Ini
+            </div>
+
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:28px;">
+              <tr>
+                <td style="background:#fdf6f4;border:1px solid #ecddd9;border-radius:8px;padding:14px 12px;text-align:center;">
+                  <div style="font-size:11px;color:#67727f;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Transaksi</div>
+                  <div style="font-size:26px;font-weight:700;color:#b2472f;">{{ $totalTransactions }}</div>
+                </td>
+                <td width="10"></td>
+                <td style="background:#fdf6f4;border:1px solid #ecddd9;border-radius:8px;padding:14px 12px;text-align:center;">
+                  <div style="font-size:11px;color:#67727f;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Pendapatan</div>
+                  <div style="font-size:15px;font-weight:700;color:#b2472f;">Rp {{ number_format($revenue, 0, ',', '.') }}</div>
+                </td>
+                <td width="10"></td>
+                <td style="background:#fdf6f4;border:1px solid #ecddd9;border-radius:8px;padding:14px 12px;text-align:center;">
+                  <div style="font-size:11px;color:#67727f;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Profit</div>
+                  <div style="font-size:15px;font-weight:700;color:{{ $profit >= 0 ? '#b2472f' : '#b45309' }};">Rp {{ number_format($profit, 0, ',', '.') }}</div>
+                </td>
+              </tr>
+            </table>
+
+            @if($totalTransactions === 0)
+              <p style="color:#67727f;font-size:13px;text-align:center;padding:4px 0 20px;">Tidak ada transaksi hari ini.</p>
+            @endif
+
+            {{-- ── Section 2: Penjualan per Kategori ── --}}
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#67727f;border-bottom:2px solid #b2472f;padding-bottom:6px;margin-bottom:14px;">
+              Penjualan per Kategori
+            </div>
+
+            @if(count($categoryBreakdown) === 0)
+              <p style="color:#67727f;font-size:13px;margin:0 0 24px;">Tidak ada penjualan hari ini.</p>
+            @else
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:28px;border-collapse:collapse;">
+                <thead>
+                  <tr style="background:#fdf6f4;">
+                    <td style="padding:8px 12px;font-size:11px;font-weight:700;color:#1d242c;text-transform:uppercase;letter-spacing:0.04em;border-bottom:1px solid #ecddd9;">Kategori</td>
+                    <td style="padding:8px 12px;font-size:11px;font-weight:700;color:#1d242c;text-transform:uppercase;letter-spacing:0.04em;border-bottom:1px solid #ecddd9;text-align:center;">Terjual</td>
+                    <td style="padding:8px 12px;font-size:11px;font-weight:700;color:#1d242c;text-transform:uppercase;letter-spacing:0.04em;border-bottom:1px solid #ecddd9;text-align:right;">Pendapatan</td>
+                  </tr>
+                </thead>
+                <tbody>
+                  @foreach($categoryBreakdown as $i => $row)
+                  <tr style="background:{{ $i % 2 === 0 ? '#ffffff' : '#fdf6f4' }};">
+                    <td style="padding:9px 12px;font-size:13px;color:#1d242c;border-bottom:1px solid #f3f0ee;">{{ $row['category'] }}</td>
+                    <td style="padding:9px 12px;font-size:13px;font-weight:700;color:#b2472f;text-align:center;border-bottom:1px solid #f3f0ee;">{{ $row['qty'] }} pcs</td>
+                    <td style="padding:9px 12px;font-size:13px;color:#1d242c;text-align:right;border-bottom:1px solid #f3f0ee;">Rp {{ number_format($row['revenue'], 0, ',', '.') }}</td>
+                  </tr>
+                  @endforeach
+                </tbody>
+              </table>
+            @endif
+
+            {{-- ── Section 3: Transaksi Dibatalkan ── --}}
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#67727f;border-bottom:2px solid #e5e7eb;padding-bottom:6px;margin-bottom:14px;">
+              Transaksi Dibatalkan ({{ $totalVoids }})
+            </div>
+
+            @if($totalVoids === 0)
+              <p style="color:#b2472f;font-weight:700;margin:0 0 24px;font-size:13px;">Tidak ada transaksi yang dibatalkan hari ini.</p>
+            @else
+              @foreach($voids as $void)
+                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:6px;">
+                  <tr>
+                    <td style="background:#fef2f2;border-left:4px solid #ef4444;border-radius:0 4px 4px 0;padding:8px 12px;font-size:13px;">
+                      <strong>{{ $void['invoice'] }}</strong> &mdash; {{ $void['cashier'] }}<br>
+                      <span style="color:#67727f;">Alasan: {{ $void['reason'] }}</span>
+                    </td>
+                  </tr>
+                </table>
+              @endforeach
+              @if($totalVoids > count($voids))
+                <p style="color:#67727f;font-size:12px;margin:6px 0 20px;">... dan {{ $totalVoids - count($voids) }} pembatalan lainnya. Lihat detail di sistem.</p>
+              @else
+                <div style="height:20px;"></div>
+              @endif
+            @endif
+
+            {{-- ── Section 4: Stok Perlu Perhatian ── --}}
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#67727f;border-bottom:2px solid #e5e7eb;padding-bottom:6px;margin-bottom:14px;">
+              Stok Perlu Perhatian ({{ $totalLowStocks }})
+            </div>
+
+            @if($totalLowStocks === 0)
+              <p style="color:#b2472f;font-weight:700;margin:0 0 8px;font-size:13px;">Semua stok masih aman.</p>
+            @else
+              @foreach($lowStocks as $item)
+                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:6px;">
+                  <tr>
+                    <td style="background:#fffbeb;border-left:4px solid #f59e0b;border-radius:0 4px 4px 0;padding:8px 12px;font-size:13px;">
+                      <strong>{{ $item['name'] }}</strong>
+                      &mdash;
+                      @if($item['stock'] === 0)
+                        <span style="background:#fee2e2;color:#991b1b;border-radius:4px;padding:1px 7px;font-size:11px;font-weight:700;">HABIS</span>
+                      @else
+                        <span style="background:#fef3c7;color:#92400e;border-radius:4px;padding:1px 7px;font-size:11px;font-weight:700;">{{ $item['stock'] }} pcs</span>
+                      @endif
+                      <br>
+                      <span style="color:#67727f;">Supplier: {{ $item['supplier'] ?: 'belum diisi' }}</span>
+                    </td>
+                  </tr>
+                </table>
+              @endforeach
+              @if($totalLowStocks > count($lowStocks))
+                <p style="color:#67727f;font-size:12px;margin:6px 0 4px;">... dan {{ $totalLowStocks - count($lowStocks) }} barang lainnya. Cek Laporan Stok di sistem.</p>
+              @endif
+              <p style="color:#92400e;font-size:13px;margin:10px 0 0;">Lakukan restock melalui Dashboard Owner &rarr; Restock Barang.</p>
+            @endif
+
+          </td>
+        </tr>
+
+        {{-- Footer --}}
+        <tr>
+          <td style="background:#fdf6f4;border-top:1px solid #ecddd9;padding:20px 32px;font-size:12px;color:#9ca3af;text-align:center;border-radius:0 0 12px 12px;">
+            Untuk detail lengkap transaksi, kunjungi sistem di
+            <a href="{{ config('app.url') }}" style="color:#b2472f;text-decoration:none;">{{ config('app.url') }}</a><br><br>
+            Email ini dikirim otomatis setiap hari pukul 20:00 oleh sistem {{ $storeName }}. Jangan balas email ini.
+          </td>
+        </tr>
+
+      </table>
+    </td>
+  </tr>
+</table>
+
 </body>
 </html>

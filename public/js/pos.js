@@ -27,134 +27,302 @@ window.POS = {
     },
     discountAmount() {
         const subtotal = this.total();
-        const type = document.querySelector("[name='discount_type']")?.value || "amount";
-        const value = Number(document.querySelector("[name='discount_value']")?.value || 0);
-        const amount = type === "percent" ? Math.round(subtotal * Math.min(value, 100) / 100) : value;
-
+        const type  = document.querySelector("[name='discount_type']")?.value || "amount";
+        const value = getMoneyRaw(document.querySelector("[data-discount-value]") || document.querySelector("[name='discount_value']"));
+        const amount = type === "percent"
+            ? Math.round(subtotal * Math.min(value, 100) / 100)
+            : value;
         return Math.min(Math.max(amount, 0), subtotal);
     },
     payable() {
         return Math.max(0, this.total() - this.discountAmount());
     },
     change() {
-        const paid = Number(document.querySelector("[name='amount_paid']")?.value || 0);
-
+        const paid = getMoneyRaw(document.querySelector("[name='amount_paid']") || document.querySelector("[data-rupiah][data-for='amount_paid']"));
         return Math.max(0, paid - this.payable());
     },
     refreshSummary() {
         const subtotal = document.querySelector("[data-subtotal]");
         const discount = document.querySelector("[data-discount-preview]");
-        const payable = document.querySelector("[data-payable-preview]");
-        const change = document.querySelector("[data-change-preview]");
+        const payable  = document.querySelector("[data-payable-preview]");
+        const change   = document.querySelector("[data-change-preview]");
         const paidHint = document.querySelector("[data-paid-hint]");
 
         if (subtotal) subtotal.textContent = formatRupiah(this.total());
-        if (discount) discount.textContent = `- ${formatRupiah(this.discountAmount())}`;
-        if (payable) payable.textContent = formatRupiah(this.payable());
-        if (change) change.textContent = formatRupiah(this.change());
-        if (paidHint) paidHint.textContent = `Minimal pembayaran: ${formatRupiah(this.payable())}`;
+        if (discount) discount.textContent = "- " + formatRupiah(this.discountAmount());
+        if (payable)  payable.textContent  = formatRupiah(this.payable());
+        if (change)   change.textContent   = formatRupiah(this.change());
+        if (paidHint) paidHint.textContent = "Minimal pembayaran: " + formatRupiah(this.payable());
     },
     showAlert(message) {
-        const alert = document.querySelector("[data-pos-alert]");
-
-        if (!alert) return;
-        alert.textContent = message;
-        alert.hidden = false;
+        const el = document.querySelector("[data-pos-alert]");
+        if (!el) return;
+        el.textContent = message;
+        el.hidden = false;
     },
     clearAlert() {
-        const alert = document.querySelector("[data-pos-alert]");
-
-        if (!alert) return;
-        alert.hidden = true;
-        alert.textContent = "";
+        const el = document.querySelector("[data-pos-alert]");
+        if (!el) return;
+        el.hidden = true;
+        el.textContent = "";
     },
     render() {
-        const list = document.querySelector("[data-cart-list]");
+        const list          = document.querySelector("[data-cart-list]");
         const checkoutItems = document.querySelectorAll("[data-items-target]");
-        const discountItems = document.querySelector("[data-discount-items]");
         if (!list) return;
 
-        list.innerHTML = this.cart.length ? this.cart.map((item) => `
-            <div class="cart-line">
-                <div><strong>${item.name}</strong><br><small class="muted">${item.sku}</small></div>
-                <input class="input" type="number" min="1" max="${item.stock}" value="${item.qty}" onchange="POS.qty(${item.id}, this.value)">
-                <span class="money">${formatRupiah(item.selling_price * item.qty)}</span>
-                <button type="button" class="button secondary" onclick="POS.remove(${item.id})">X</button>
-            </div>
-        `).join("") : `<p class="muted">Keranjang masih kosong.</p>`;
+        // Cart HTML uses trusted server data (product names/SKUs from DB — not user input)
+        // eslint-disable-next-line no-unsanitized/property
+        list.innerHTML = this.cart.length ? this.cart.map((item) =>
+            '<div class="cart-line">' +
+                '<div><strong>' + item.name + '</strong><br><small class="muted">' + item.sku + '</small></div>' +
+                '<input class="input" type="number" min="1" max="' + item.stock + '" value="' + item.qty + '" onchange="POS.qty(' + item.id + ', this.value)">' +
+                '<span class="money">' + formatRupiah(item.selling_price * item.qty) + '</span>' +
+                '<button type="button" class="button secondary" onclick="POS.remove(' + item.id + ')">X</button>' +
+            '</div>'
+        ).join("") : '<p class="muted">Keranjang masih kosong.</p>';
 
-        const inputs = this.cart.map((item, index) => `
-            <input type="hidden" name="items[${index}][product_id]" value="${item.id}">
-            <input type="hidden" name="items[${index}][qty]" value="${item.qty}">
-        `).join("");
-        checkoutItems.forEach((target) => target.innerHTML = inputs);
-        if (discountItems) discountItems.innerHTML = inputs;
+        const inputs = this.cart.map((item, index) =>
+            '<input type="hidden" name="items[' + index + '][product_id]" value="' + item.id + '">' +
+            '<input type="hidden" name="items[' + index + '][qty]" value="' + item.qty + '">'
+        ).join("");
+        checkoutItems.forEach((target) => { target.innerHTML = inputs; });
         this.refreshSummary();
     },
 };
 
-document.addEventListener("input", (event) => {
-    if (event.target.matches("[name='discount_value'], [name='amount_paid'], [name='discount_reason']")) {
-        if (event.target.matches("[name='discount_reason']")) {
-            window.POS.clearAlert();
+// ── Money masking ─────────────────────────────────────────────────────────────
+
+// Read the raw numeric value from a masked or plain input
+function getMoneyRaw(el) {
+    if (!el) return 0;
+    // If masked, read from sibling hidden input
+    var hiddenName = el.dataset.maskedName;
+    if (hiddenName) {
+        var h = el.parentNode && el.parentNode.querySelector('input[type="hidden"][data-mask-for="' + hiddenName + '"]');
+        if (h) return parseFloat(h.value) || 0;
+    }
+    return parseFloat((el.value || '').replace(/\./g, '').replace(',', '.')) || 0;
+}
+
+// Format integer as "100.000" (id-ID thousands)
+function fmtThousands(n) {
+    return (parseInt(n, 10) || 0).toLocaleString('id-ID');
+}
+
+/**
+ * attachRupiahMask — turns a number/text input into a live-formatted money field.
+ * Inserts a hidden sibling with the original name to carry the raw value to the server.
+ */
+function attachRupiahMask(input) {
+    if (input.dataset.maskAttached) return;
+    input.dataset.maskAttached = 'rupiah';
+
+    var originalName = input.name || '';
+    input.dataset.maskedName = originalName;
+    if (originalName) input.removeAttribute('name');
+
+    // Hidden sibling carries the real value
+    var hidden = document.createElement('input');
+    hidden.type              = 'hidden';
+    hidden.name              = originalName;
+    hidden.dataset.maskFor   = originalName;
+    input.parentNode.insertBefore(hidden, input.nextSibling);
+
+    // Seed from existing value (old() repopulation or programmatic set)
+    var seed = parseInt((input.value || '').replace(/\D/g, ''), 10) || 0;
+    input.value  = seed > 0 ? fmtThousands(seed) : '';
+    hidden.value = seed > 0 ? seed : '';
+    input.type   = 'text';
+    input.inputMode = 'numeric';
+    input.autocomplete = 'off';
+
+    function refresh() {
+        var raw    = (input.value || '').replace(/\D/g, '');
+        var num    = parseInt(raw, 10) || 0;
+        var oldLen = input.value.length;
+        var selEnd = input.selectionEnd || 0;
+
+        hidden.value = num > 0 ? num : '';
+        input.value  = num > 0 ? fmtThousands(num) : '';
+
+        // Restore cursor adjusted for dot insertion/removal
+        var diff = input.value.length - oldLen;
+        try { input.setSelectionRange(selEnd + diff, selEnd + diff); } catch (e) {}
+    }
+
+    input.addEventListener('input', refresh);
+
+    // Allow external code (pricing.js) to set raw value and trigger reformat
+    input.setRaw = function(n) {
+        var num  = parseInt(n, 10) || 0;
+        hidden.value = num > 0 ? num : '';
+        input.value  = num > 0 ? fmtThousands(num) : '';
+    };
+    input.getRaw = function() {
+        return parseInt(hidden.value, 10) || 0;
+    };
+}
+
+/**
+ * attachPercentMask — for the discount_value field when type is "percent".
+ * While typing: plain digits. On blur: appends "%". On focus: strips "%".
+ */
+function attachPercentMask(input) {
+    if (input.dataset.maskAttached) return;
+    input.dataset.maskAttached = 'percent';
+
+    var originalName = input.name || '';
+    input.dataset.maskedName = originalName;
+    if (originalName) input.removeAttribute('name');
+
+    var hidden = document.createElement('input');
+    hidden.type            = 'hidden';
+    hidden.name            = originalName;
+    hidden.dataset.maskFor = originalName;
+    input.parentNode.insertBefore(hidden, input.nextSibling);
+
+    var seed = parseFloat((input.value || '').replace(/[^0-9.]/g, '')) || 0;
+    input.value  = seed > 0 ? seed + '%' : '';
+    hidden.value = seed > 0 ? seed : '';
+    input.type   = 'text';
+    input.inputMode = 'numeric';
+    input.autocomplete = 'off';
+
+    input.addEventListener('focus', function() {
+        input.value = hidden.value ? String(hidden.value) : '';
+    });
+    input.addEventListener('input', function() {
+        var raw  = (input.value || '').replace(/[^0-9.]/g, '');
+        var num  = parseFloat(raw) || 0;
+        hidden.value = num > 0 ? num : '';
+        // Don't append % while typing — do it on blur
+    });
+    input.addEventListener('blur', function() {
+        var num  = parseFloat((input.value || '').replace(/[^0-9.]/g, '')) || 0;
+        hidden.value = num > 0 ? num : '';
+        input.value  = num > 0 ? num + '%' : '';
+    });
+
+    input.setRaw = function(n) {
+        var num  = parseFloat(n) || 0;
+        hidden.value = num > 0 ? num : '';
+        input.value  = num > 0 ? num + '%' : '';
+    };
+    input.getRaw = function() {
+        return parseFloat(hidden.value) || 0;
+    };
+}
+
+/**
+ * Tear down masking on discount_value so it can be re-masked with a different type.
+ */
+function teardownMask(input) {
+    if (!input) return;
+    var maskFor = input.dataset.maskedName;
+    if (maskFor) {
+        var h = input.parentNode.querySelector('input[type="hidden"][data-mask-for="' + maskFor + '"]');
+        if (h) h.remove();
+        input.name = maskFor;
+    }
+    delete input.dataset.maskAttached;
+    delete input.dataset.maskedName;
+    input.value = '';       // clear before switching type (avoids browser rejecting non-numeric value)
+    input.type  = 'number';
+    input.value = '';
+}
+
+/**
+ * initMoneyInputs — attach masking to all money inputs within a root element.
+ * Safe to call multiple times (idempotent).
+ */
+function initMoneyInputs(root) {
+    root = root || document;
+
+    root.querySelectorAll('[data-rupiah]').forEach(function(el) {
+        attachRupiahMask(el);
+    });
+
+    root.querySelectorAll('[data-bulk-cost], [data-bulk-shipping]').forEach(function(el) {
+        attachRupiahMask(el);
+    });
+
+    // Discount value: check current type
+    root.querySelectorAll('[data-discount-value]').forEach(function(el) {
+        var typeEl = document.querySelector("[name='discount_type']");
+        var type   = typeEl ? typeEl.value : 'amount';
+        if (type === 'percent') {
+            attachPercentMask(el);
+        } else {
+            attachRupiahMask(el);
         }
+    });
+}
+
+/**
+ * When discount_type changes, re-mask discount_value with the correct format.
+ */
+function reinitDiscountMask() {
+    var valueEl = document.querySelector('[data-discount-value]');
+    if (!valueEl) return;
+    teardownMask(valueEl);
+
+    var typeEl = document.querySelector("[name='discount_type']");
+    var type   = typeEl ? typeEl.value : 'amount';
+    if (type === 'percent') {
+        attachPercentMask(valueEl);
+    } else {
+        attachRupiahMask(valueEl);
+    }
+    window.POS.refreshSummary();
+}
+
+// ── Event delegation ──────────────────────────────────────────────────────────
+
+document.addEventListener("input", function(event) {
+    var t = event.target;
+    if (t.matches("[data-discount-value], [data-rupiah], [data-bulk-cost], [data-bulk-shipping]") ||
+        t.matches("[name='discount_reason']")) {
+        if (t.matches("[name='discount_reason']")) window.POS.clearAlert();
         window.POS.refreshSummary();
     }
 });
 
-document.addEventListener("change", (event) => {
+document.addEventListener("change", function(event) {
     if (event.target.matches("[name='discount_type']")) {
-        window.POS.refreshSummary();
+        reinitDiscountMask();
     }
 });
 
-document.addEventListener("submit", (event) => {
-    if (!event.target.matches("[data-pos-checkout-form]")) {
-        return;
-    }
+document.addEventListener("submit", function(event) {
+    if (!event.target.matches("[data-pos-checkout-form]")) return;
 
-    const discountValue = Number(document.querySelector("[name='discount_value']")?.value || 0);
-    const discountReason = document.querySelector("[name='discount_reason']")?.value.trim() || "";
+    // Read from hidden sibling (set by money mask) or fallback to field value
+    var discountHidden = document.querySelector("input[type='hidden'][data-mask-for='discount_value']");
+    var discountValue  = discountHidden ? (parseFloat(discountHidden.value) || 0) : 0;
+    var discountReason = (document.querySelector("[name='discount_reason']") || {}).value;
+    discountReason = (discountReason || '').trim();
 
     if (discountValue > 0 && !discountReason) {
         event.preventDefault();
         window.POS.showAlert("Alasan diskon wajib diisi. Keranjang tetap aman, isi catatan diskon lalu lanjutkan transaksi.");
-        document.querySelector("[name='discount_reason']")?.focus();
+        var el = document.querySelector("[name='discount_reason']");
+        if (el) el.focus();
     }
 });
 
-document.addEventListener("DOMContentLoaded", () => {
-    initRupiahPreviews();
+document.addEventListener("DOMContentLoaded", function() {
+    initMoneyInputs();
 
     if (Array.isArray(window.POS_INITIAL_CART) && window.POS_INITIAL_CART.length) {
         window.POS.cart = window.POS_INITIAL_CART;
         window.POS.render();
         return;
     }
-
     window.POS.refreshSummary();
 });
 
-function initRupiahPreviews() {
-    document.querySelectorAll('[data-rupiah]').forEach(function (input) {
-        var preview = input.parentNode.querySelector('[data-rp-preview]');
-        if (!preview) return;
-
-        function update() {
-            var n = parseInt(input.value, 10);
-            if (!isNaN(n) && n > 0) {
-                preview.textContent = 'Rp ' + n.toLocaleString('id-ID');
-                preview.hidden = false;
-            } else {
-                preview.hidden = true;
-            }
-        }
-
-        input.addEventListener('input', update);
-        input.addEventListener('blur', update);
-        update();
-    });
-}
+// ── Size select ───────────────────────────────────────────────────────────────
 
 function sizeSelectChange(sel) {
     var wrapper = sel.closest('[data-size-wrapper]');
@@ -162,7 +330,7 @@ function sizeSelectChange(sel) {
     var hidden  = wrapper.querySelector('input[type="hidden"]');
     if (sel.value === 'other') {
         custom.hidden = false;
-        custom.oninput = function () { hidden.value = custom.value; };
+        custom.oninput = function() { hidden.value = custom.value; };
         hidden.value = custom.value;
     } else {
         custom.hidden = true;
@@ -170,46 +338,62 @@ function sizeSelectChange(sel) {
     }
 }
 
+// ── Bulk table row management ─────────────────────────────────────────────────
+
 function addProductRow() {
     var tbody = document.getElementById('bulk-tbody');
     if (!tbody) return;
     var rows  = tbody.querySelectorAll('tr');
     var clone = rows[rows.length - 1].cloneNode(true);
 
-    // Reset all text/number inputs
-    clone.querySelectorAll('input[type="text"], input[type="number"]').forEach(function (i) {
-        i.value = (i.name && i.name.includes('stock')) ? '1' : '';
-    });
-    // Reset selects to first option
-    clone.querySelectorAll('select').forEach(function (s) { s.selectedIndex = 0; });
-    // Hide manual size input, reset hidden size input
-    clone.querySelectorAll('[data-size-custom]').forEach(function (c) {
-        c.hidden = true;
-        c.value  = '';
-    });
-    clone.querySelectorAll('input[type="hidden"]').forEach(function (h) {
-        if (h.name && h.name.includes('size')) h.value = 'S';
-    });
-    // Re-attach rupiah preview for cloned inputs
-    clone.querySelectorAll('[data-rupiah]').forEach(function (input) {
-        var preview = input.parentNode.querySelector('[data-rp-preview]');
-        if (!preview) return;
-        function updatePreview() {
-            var n = parseInt(input.value, 10);
-            if (!isNaN(n) && n > 0) { preview.textContent = 'Rp ' + n.toLocaleString('id-ID'); preview.hidden = false; }
-            else { preview.hidden = true; }
-        }
-        input.addEventListener('input', updatePreview);
-        input.addEventListener('blur', updatePreview);
+    // Remove money-mask hidden inputs injected by attachRupiahMask
+    clone.querySelectorAll('input[type="hidden"][data-mask-for]').forEach(function(h) {
+        h.remove();
     });
 
-    // Update name indices
+    // Reset masking flags and restore original state on cloned inputs
+    clone.querySelectorAll('input[data-mask-attached]').forEach(function(i) {
+        var origName = i.dataset.maskedName || '';
+        if (origName) i.name = origName;
+        delete i.dataset.maskAttached;
+        delete i.dataset.maskedName;
+        i.type  = 'number';
+        i.value = '';
+    });
+
+    // Reset remaining inputs
+    clone.querySelectorAll('input[type="number"], input[type="text"]:not([data-size-custom])').forEach(function(i) {
+        if (!i.dataset.maskAttached) {
+            i.value = (i.name && i.name.includes('stock')) ? '1' : '';
+        }
+    });
+
+    // Reset selects
+    clone.querySelectorAll('select').forEach(function(s) { s.selectedIndex = 0; });
+
+    // Reset size inputs
+    clone.querySelectorAll('[data-size-custom]').forEach(function(c) {
+        c.hidden = true; c.value = '';
+    });
+    clone.querySelectorAll('input[type="hidden"]').forEach(function(h) {
+        if (h.name && h.name.includes('size')) h.value = 'S';
+    });
+
+    // Re-index names
     var newIndex = rows.length;
-    clone.querySelectorAll('[name]').forEach(function (el) {
+    clone.querySelectorAll('[name]').forEach(function(el) {
         el.name = el.name.replace(/rows\[\d+\]/, 'rows[' + newIndex + ']');
     });
 
     tbody.appendChild(clone);
+
+    // Re-attach money masking for the new row
+    initMoneyInputs(clone);
+
+    // Re-attach auto-pricing (defined in pricing.js)
+    if (typeof window.initBulkRow === 'function') {
+        window.initBulkRow(clone);
+    }
 }
 
 function removeProductRow(btn) {
@@ -217,9 +401,8 @@ function removeProductRow(btn) {
     if (!tbody) return;
     if (tbody.querySelectorAll('tr').length > 1) {
         btn.closest('tr').remove();
-        // Re-index remaining rows
-        tbody.querySelectorAll('tr').forEach(function (row, idx) {
-            row.querySelectorAll('[name]').forEach(function (el) {
+        tbody.querySelectorAll('tr').forEach(function(row, idx) {
+            row.querySelectorAll('[name]').forEach(function(el) {
                 el.name = el.name.replace(/rows\[\d+\]/, 'rows[' + idx + ']');
             });
         });
