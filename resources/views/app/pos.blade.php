@@ -50,7 +50,7 @@
                         onclick='POS.add(@json($product));if(window.innerWidth<=820)switchPosTab("cart")'>
                         <div class="product-card-store">{{ $product->store?->name }}</div>
                         <strong>{{ $product->name }}</strong>
-                        <small>{{ $product->category }}@if($product->color) · {{ $product->color }}@endif@if($product->size) · {{ $product->size }}@endif</small>
+                        <small>{{ $product->category }}{{ $product->color ? ' · '.$product->color : '' }}{{ $product->size ? ' · '.$product->size : '' }}</small>
                         <p class="money">Rp {{ number_format($product->selling_price, 0, ',', '.') }}</p>
                         <span class="badge {{ $product->stockBadgeClass() }}">{{ $product->stockLabel() }}</span>
                     </button>
