@@ -239,21 +239,35 @@ tr:last-child td { border-bottom: none; }
 .pos-grid { display: grid; grid-template-columns: 1fr 360px; gap: 14px; align-items: start; }
 
 /* ── Store filter tabs ──────────────────────────────────── */
-.pos-store-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
-.pos-store-tab {
-    padding: 7px 16px;
+.pos-store-tabs {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    background: var(--mist);
     border: 1px solid var(--line);
-    border-radius: 999px;
-    background: white;
+    border-radius: 10px;
+    padding: 4px;
+}
+.pos-store-tab {
+    padding: 7px 18px;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
     font-size: 13px;
     font-weight: 600;
     color: var(--muted);
     cursor: pointer;
-    transition: background .12s, color .12s, border-color .12s;
+    transition: background .15s, color .15s, box-shadow .15s;
     -webkit-tap-highlight-color: transparent;
+    white-space: nowrap;
 }
-.pos-store-tab:hover { border-color: var(--accent); color: var(--accent); }
-.pos-store-tab.active { background: var(--accent); color: white; border-color: var(--accent); }
+.pos-store-tab:hover { color: var(--ink); background: rgba(255,255,255,.7); }
+.pos-store-tab.active {
+    background: white;
+    color: var(--accent);
+    box-shadow: 0 1px 4px rgba(16,33,41,.12);
+}
 
 /* ── Product grid & cards ───────────────────────────────── */
 .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
