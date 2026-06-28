@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Mail\DailyReportMail;
 use App\Models\Product;
 use App\Models\Sale;
+use App\Models\Store;
 use App\Models\User;
 use App\Services\SettingsService;
 use Illuminate\Console\Command;
@@ -68,7 +69,7 @@ class SendDailyReport extends Command
             'supplier' => $p->supplier,
         ])->toArray();
 
-        // Category breakdown: qty sold + revenue per category today
+        // Category breakdown: qty sold + revenue per category today (all stores combined)
         $categoryBreakdown = DB::table('sale_items')
             ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
             ->join('products', 'products.id', '=', 'sale_items.product_id')
@@ -88,6 +89,44 @@ class SendDailyReport extends Command
                 'revenue'  => (int) $row->revenue,
             ])
             ->toArray();
+
+        // Per-store breakdown: transactions, revenue, and category rows per store
+        $stores = Store::query()->orderBy('name')->get(['id', 'name']);
+        $storeBreakdowns = $stores->map(function (Store $store) use ($today, $todayEnd): array {
+            $storeSales = Sale::query()
+                ->where('status', 'completed')
+                ->where('store_id', $store->id)
+                ->whereBetween('created_at', [$today, $todayEnd])
+                ->get(['id', 'total']);
+
+            $rows = DB::table('sale_items')
+                ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
+                ->join('products', 'products.id', '=', 'sale_items.product_id')
+                ->where('sales.status', 'completed')
+                ->where('sales.store_id', $store->id)
+                ->whereBetween('sales.created_at', [$today, $todayEnd])
+                ->groupBy('products.category')
+                ->orderByDesc(DB::raw('SUM(sale_items.qty)'))
+                ->select([
+                    'products.category',
+                    DB::raw('SUM(sale_items.qty) as qty'),
+                    DB::raw('SUM(sale_items.line_total) as revenue'),
+                ])
+                ->get()
+                ->map(fn ($row): array => [
+                    'category' => ucfirst((string) $row->category),
+                    'qty'      => (int) $row->qty,
+                    'revenue'  => (int) $row->revenue,
+                ])
+                ->toArray();
+
+            return [
+                'store_name'   => $store->name,
+                'transactions' => $storeSales->count(),
+                'revenue'      => (int) $storeSales->sum('total'),
+                'rows'         => $rows,
+            ];
+        })->toArray();
 
         $storeName = (string) $settings->get('store_name', config('app.name'));
 
@@ -114,6 +153,7 @@ class SendDailyReport extends Command
                     revenue: (int) $completedSales->sum('total'),
                     profit: (int) $completedSales->sum('profit'),
                     categoryBreakdown: $categoryBreakdown,
+                    storeBreakdowns: $storeBreakdowns,
                     voids: $voids,
                     totalVoids: $totalVoids,
                     lowStocks: $lowStocks,

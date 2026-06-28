@@ -34,6 +34,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/owner/history', [AppController::class, 'ownerHistory'])->name('owner.history');
     Route::get('/owner/settings', [AppController::class, 'settings'])->name('owner.settings');
     Route::post('/owner/settings', [AppController::class, 'saveSettings'])->name('owner.settings.save');
+    Route::patch('/owner/toko/{store}', [AppController::class, 'updateStore'])->name('owner.store.update');
     Route::get('/owner/pengguna', [AppController::class, 'users'])->name('owner.users');
     Route::post('/owner/pengguna', [AppController::class, 'storeUser'])->name('owner.users.store');
     Route::post('/owner/pengguna/{user}/password', [AppController::class, 'changeUserPassword'])->name('owner.users.password');

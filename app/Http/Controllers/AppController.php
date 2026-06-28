@@ -114,9 +114,11 @@ class AppController extends Controller
     {
         return view('app.pos', [
             'products' => Product::query()
+                ->with('store:id,name')
                 ->where('stock', '>', 0)
                 ->orderBy('name')
                 ->get(['id', 'name', 'sku', 'category', 'color', 'size', 'selling_price', 'cost_price', 'stock', 'store_id']),
+            'stores' => Store::query()->orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -343,7 +345,22 @@ class AppController extends Controller
 
         return view('app.owner-settings', [
             'settings' => $settings->all(),
+            'stores'   => Store::query()->orderBy('name')->get(['id', 'name', 'address']),
         ]);
+    }
+
+    public function updateStore(Request $request, Store $store): RedirectResponse
+    {
+        abort_unless(auth()->user()->isOwner(), 403);
+
+        $data = $request->validate([
+            'name'    => ['required', 'string', 'max:120'],
+            'address' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $store->update($data);
+
+        return redirect()->route('owner.settings')->with('status', "Detail {$store->name} berhasil disimpan.");
     }
 
     public function saveSettings(Request $request, SettingsService $settings): RedirectResponse

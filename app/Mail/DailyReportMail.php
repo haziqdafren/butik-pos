@@ -20,6 +20,7 @@ class DailyReportMail extends Mailable
         public readonly int $revenue,
         public readonly int $profit,
         public readonly array $categoryBreakdown,
+        public readonly array $storeBreakdowns,
         public readonly array $voids,
         public readonly int $totalVoids,
         public readonly array $lowStocks,

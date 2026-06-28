@@ -1,6 +1,33 @@
 <x-layouts.app title="Pengaturan Toko">
+    {{-- Store details per store --}}
+    <section class="card" style="max-width:680px;margin-bottom:24px">
+        <h3>Detail Toko</h3>
+        @foreach($stores as $store)
+        <form method="post" action="{{ route('owner.store.update', $store) }}" style="{{ !$loop->last ? 'margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid var(--border)' : '' }}">
+            @csrf
+            @method('PATCH')
+            <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;">{{ $store->name }}</div>
+            <div class="grid-2" style="grid-template-columns:1fr 1fr">
+                <div class="field">
+                    <label>Nama Toko</label>
+                    <input class="input" type="text" name="name"
+                           value="{{ old('name', $store->name) }}"
+                           maxlength="120" required>
+                </div>
+                <div class="field">
+                    <label>Alamat</label>
+                    <input class="input" type="text" name="address"
+                           value="{{ old('address', $store->address) }}"
+                           maxlength="255">
+                </div>
+            </div>
+            <button class="button secondary" type="submit" style="font-size:13px;padding:6px 16px">Simpan</button>
+        </form>
+        @endforeach
+    </section>
+
     <section class="card" style="max-width:680px">
-        <h3>Pengaturan Toko</h3>
+        <h3>Pengaturan Umum</h3>
 
         <form method="post" action="{{ route('owner.settings.save') }}">
             @csrf

@@ -54,13 +54,28 @@
               <p style="color:#67727f;font-size:13px;text-align:center;padding:4px 0 20px;">Tidak ada transaksi hari ini.</p>
             @endif
 
-            {{-- ── Section 2: Penjualan per Kategori ── --}}
+            {{-- ── Section 2: Penjualan per Toko ── --}}
+            @foreach($storeBreakdowns as $store)
             <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#67727f;border-bottom:2px solid #b2472f;padding-bottom:6px;margin-bottom:14px;">
-              Penjualan per Kategori
+              {{ $store['store_name'] }} — Penjualan Hari Ini
             </div>
 
-            @if(count($categoryBreakdown) === 0)
-              <p style="color:#67727f;font-size:13px;margin:0 0 24px;">Tidak ada penjualan hari ini.</p>
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:14px;">
+              <tr>
+                <td style="background:#fdf6f4;border:1px solid #ecddd9;border-radius:8px;padding:10px 12px;text-align:center;">
+                  <div style="font-size:11px;color:#67727f;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Transaksi</div>
+                  <div style="font-size:22px;font-weight:700;color:#b2472f;">{{ $store['transactions'] }}</div>
+                </td>
+                <td width="10"></td>
+                <td style="background:#fdf6f4;border:1px solid #ecddd9;border-radius:8px;padding:10px 12px;text-align:center;">
+                  <div style="font-size:11px;color:#67727f;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Pendapatan</div>
+                  <div style="font-size:14px;font-weight:700;color:#b2472f;">Rp {{ number_format($store['revenue'], 0, ',', '.') }}</div>
+                </td>
+              </tr>
+            </table>
+
+            @if(count($store['rows']) === 0)
+              <p style="color:#67727f;font-size:13px;margin:0 0 24px;">Tidak ada penjualan dari {{ $store['store_name'] }} hari ini.</p>
             @else
               <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:28px;border-collapse:collapse;">
                 <thead>
@@ -71,7 +86,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  @foreach($categoryBreakdown as $i => $row)
+                  @foreach($store['rows'] as $i => $row)
                   <tr style="background:{{ $i % 2 === 0 ? '#ffffff' : '#fdf6f4' }};">
                     <td style="padding:9px 12px;font-size:13px;color:#1d242c;border-bottom:1px solid #f3f0ee;">{{ $row['category'] }}</td>
                     <td style="padding:9px 12px;font-size:13px;font-weight:700;color:#b2472f;text-align:center;border-bottom:1px solid #f3f0ee;">{{ $row['qty'] }} pcs</td>
@@ -81,6 +96,7 @@
                 </tbody>
               </table>
             @endif
+            @endforeach
 
             {{-- ── Section 3: Transaksi Dibatalkan ── --}}
             <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#67727f;border-bottom:2px solid #e5e7eb;padding-bottom:6px;margin-bottom:14px;">
