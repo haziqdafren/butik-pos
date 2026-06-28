@@ -71,7 +71,8 @@ class AppController extends Controller
             'recentDiscounts' => DiscountApproval::query()->with('requester:id,name')->latest()->take(8)->get(),
             'notifications'   => ($notifications = Notification::query()->whereNull('read_at')->latest()->take(20)->get()),
             'unreadCount'     => $notifications->count(),
-            'products'        => Product::query()->with('store:id,name')->orderBy('name')->get(['id', 'name', 'stock', 'store_id']),
+            'products'        => Product::query()->with('store:id,name')->orderBy('name')->get(['id', 'name', 'stock', 'store_id', 'category']),
+            'stores'          => Store::query()->orderBy('name')->get(['id', 'name']),
             'productsCount'   => Product::query()->count(),
             'cashiersCount'   => User::query()->where('role', 'cashier')->count(),
             'summary'         => $summary,
@@ -541,9 +542,14 @@ class AppController extends Controller
         return redirect()->route('owner.users')->with('status', "Pengguna {$name} berhasil dihapus.");
     }
 
-    private function categories(): array
+    public static function categoriesList(): array
     {
         return ['celana', 'rok', 'vest', 'kemeja', 'gaun', 'one set', 'tunik', 'kaos rajut', 'sendal', 'tas', 'gasper', 'sepatu', 'kacamata', 'kaos', 'manset'];
+    }
+
+    private function categories(): array
+    {
+        return self::categoriesList();
     }
 
     private function sku(string $storeCode, string $category, ?string $color, ?string $size): string

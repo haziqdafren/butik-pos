@@ -113,19 +113,25 @@
         </div>
     </div>
 
-    {{-- Form Restock --}}
+    {{-- Form Pembelian Barang --}}
     <div class="card" style="margin-top:16px">
-        <h3>Restock Barang</h3>
-        <p class="muted">Catat pembelian barang dari supplier. Stok akan otomatis bertambah dan harga modal diperbarui.</p>
-        <form method="post" action="{{ route('owner.restock') }}" data-restock-form>
+        <h3>Pembelian Barang</h3>
+        <div style="display:flex;gap:8px;margin-bottom:16px">
+            <button type="button" class="button" id="btnModeRestock" onclick="setPurchaseMode('restock')">Restock Barang Lama</button>
+            <button type="button" class="button secondary" id="btnModeNew" onclick="setPurchaseMode('new')">+ Barang Baru</button>
+        </div>
+
+        {{-- Restock existing product --}}
+        <form method="post" action="{{ route('owner.restock') }}" data-restock-form id="formRestock">
             @csrf
+            <p class="muted" style="margin-bottom:12px">Stok otomatis bertambah dan harga modal diperbarui.</p>
             <div class="grid-2" style="gap:12px">
                 <div class="field">
                     <label>Produk <span style="color:red">*</span></label>
                     <select class="input" name="product_id" required>
                         <option value="">-- Pilih Produk --</option>
                         @foreach($products as $product)
-                            <option value="{{ $product->id }}">{{ $product->name }} (Stok: {{ $product->stock }})</option>
+                            <option value="{{ $product->id }}">{{ $product->store->name }} · {{ $product->name }} (Stok: {{ $product->stock }})</option>
                         @endforeach
                     </select>
                 </div>
@@ -140,7 +146,7 @@
                 </div>
                 <div class="field">
                     <label>Jumlah <span style="color:red">*</span></label>
-                    <input class="input" name="qty" type="number" min="1" required placeholder="Contoh: 12 (1 bal)">
+                    <input class="input" name="qty" type="number" min="1" required placeholder="Contoh: 12">
                 </div>
                 <div class="field">
                     <label>Harga per Unit (Rp) <span style="color:red">*</span></label>
@@ -149,14 +155,76 @@
                     <small data-restock-preview class="muted" style="margin-top:4px;display:block" hidden></small>
                 </div>
                 <div class="field" style="grid-column:1/-1">
-                    <label>Catatan Barang</label>
+                    <label>Catatan</label>
                     <textarea class="input" name="notes" rows="2" maxlength="1000" placeholder="Contoh: 1 bal isi 12 pcs, beli di Tanah Abang blok A..."></textarea>
                 </div>
             </div>
             <button class="button" style="margin-top:12px">Simpan Restock</button>
         </form>
+
+        {{-- New product --}}
+        <form method="post" action="{{ route('products.bulk-store') }}" id="formNewProduct" hidden>
+            @csrf
+            <p class="muted" style="margin-bottom:12px">Barang baru ditambahkan ke daftar produk dan stok langsung tercatat.</p>
+            <div class="grid-2" style="gap:12px">
+                <div class="field">
+                    <label>Toko <span style="color:red">*</span></label>
+                    <select class="input" name="rows[0][store_id]" required>
+                        @foreach($stores as $store)
+                            <option value="{{ $store->id }}">{{ $store->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Nama Barang <span style="color:red">*</span></label>
+                    <input class="input" type="text" name="rows[0][name]" required maxlength="120" placeholder="Nama barang">
+                </div>
+                <div class="field">
+                    <label>Kategori <span style="color:red">*</span></label>
+                    <select class="input" name="rows[0][category]" required>
+                        @foreach(\App\Http\Controllers\AppController::categoriesList() as $cat)
+                            <option value="{{ $cat }}">{{ ucfirst($cat) }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Warna</label>
+                    <input class="input" type="text" name="rows[0][color]" maxlength="60" placeholder="Hitam, Putih...">
+                </div>
+                <div class="field">
+                    <label>Ukuran</label>
+                    <input class="input" type="text" name="rows[0][size]" maxlength="40" placeholder="S, M, L, Free...">
+                </div>
+                <div class="field">
+                    <label>Supplier</label>
+                    <input class="input" type="text" name="rows[0][supplier]" maxlength="120" placeholder="Nama supplier">
+                </div>
+                <div class="field">
+                    <label>Harga Modal (Rp) <span style="color:red">*</span></label>
+                    <input class="input" type="number" name="rows[0][cost_price]" min="0" required placeholder="0" data-rupiah>
+                    <small class="muted" data-rp-preview hidden></small>
+                </div>
+                <div class="field">
+                    <label>Harga Jual (Rp) <span style="color:red">*</span></label>
+                    <input class="input" type="number" name="rows[0][selling_price]" min="0" required placeholder="0" data-rupiah>
+                    <small class="muted" data-rp-preview hidden></small>
+                </div>
+                <div class="field">
+                    <label>Stok Awal <span style="color:red">*</span></label>
+                    <input class="input" type="number" name="rows[0][stock]" min="0" required value="1">
+                </div>
+            </div>
+            <button class="button" style="margin-top:12px">Simpan Barang Baru</button>
+        </form>
     </div>
 <script>
 window.PRODUCT_CATEGORIES = @json($products->pluck('category', 'id'));
+function setPurchaseMode(mode) {
+    var isNew = mode === 'new';
+    document.getElementById('formRestock').hidden = isNew;
+    document.getElementById('formNewProduct').hidden = !isNew;
+    document.getElementById('btnModeRestock').className = isNew ? 'button secondary' : 'button';
+    document.getElementById('btnModeNew').className = isNew ? 'button' : 'button secondary';
+}
 </script>
 </x-layouts.app>
