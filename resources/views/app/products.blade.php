@@ -87,8 +87,7 @@
                             </td>
                             <td>
                                 <input class="input" type="number" name="rows[0][selling_price]" min="0" required placeholder="–" data-bulk-selling
-                                    readonly tabindex="-1"
-                                    style="background:var(--mist);cursor:default;font-weight:700;color:var(--ink)">
+                                    style="font-weight:700;color:var(--ink)" title="Harga jual otomatis — bisa diubah manual">
                                 <small data-bulk-price-preview class="muted" style="font-size:10px;line-height:1.5;display:block;margin-top:3px"></small>
                             </td>
                             <td><input class="input" type="number" name="rows[0][stock]" min="0" required value="1" style="width:64px"></td>

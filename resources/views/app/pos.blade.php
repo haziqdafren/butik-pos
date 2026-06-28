@@ -28,21 +28,57 @@
 
     <div class="pos-grid">
         <section id="posPanelProducts" class="pos-panel-active">
-            <div class="toolbar">
-                <input class="input" style="max-width:420px" placeholder="Cari nama, SKU, kategori, warna" oninput="document.querySelectorAll('[data-product-card]').forEach(card => card.hidden = !card.dataset.search.includes(this.value.toLowerCase()))">
+            {{-- Store filter tabs --}}
+            <div class="pos-store-tabs" id="posStoreTabs">
+                <button class="pos-store-tab active" data-store="all" onclick="filterPosStore('all',this)">🏪 Semua Toko</button>
+                @foreach($stores as $store)
+                    <button class="pos-store-tab" data-store="{{ $store->id }}" onclick="filterPosStore('{{ $store->id }}',this)">{{ $store->name }}</button>
+                @endforeach
+            </div>
+
+            {{-- Search bar --}}
+            <div class="toolbar" style="margin-bottom:12px">
+                <input class="input" id="posSearchInput" style="max-width:420px" placeholder="Cari nama, SKU, kategori, warna..." oninput="filterPosProducts()">
                 <a class="button secondary" href="{{ route('products.index') }}">Input Barang</a>
             </div>
-            <div class="product-grid">
+
+            <div class="product-grid" id="posProductGrid">
                 @foreach($products as $product)
-                    <button type="button" class="product-card" data-product-card data-search="{{ strtolower($product->name.' '.$product->sku.' '.$product->category.' '.$product->color.' '.$product->size) }}" onclick='POS.add(@json($product));if(window.innerWidth<=820)switchPosTab("cart")'>
-                        <small>{{ $product->sku }}</small>
+                    <button type="button" class="product-card" data-product-card
+                        data-store="{{ $product->store_id }}"
+                        data-search="{{ strtolower($product->name.' '.$product->sku.' '.$product->category.' '.($product->color ?? '').' '.($product->size ?? '')) }}"
+                        onclick='POS.add(@json($product));if(window.innerWidth<=820)switchPosTab("cart")'>
+                        <div class="product-card-store">{{ $product->store?->name }}</div>
                         <strong>{{ $product->name }}</strong>
-                        <small>{{ $product->category }} · {{ $product->color }} · {{ $product->size }}</small>
+                        <small>{{ $product->category }}@if($product->color) · {{ $product->color }}@endif@if($product->size) · {{ $product->size }}@endif</small>
                         <p class="money">Rp {{ number_format($product->selling_price, 0, ',', '.') }}</p>
                         <span class="badge {{ $product->stockBadgeClass() }}">{{ $product->stockLabel() }}</span>
                     </button>
                 @endforeach
             </div>
+            <p id="posNoResults" hidden style="padding:32px;text-align:center;color:var(--muted);font-size:14px">Tidak ada produk ditemukan.</p>
+
+            <script>
+            var _posActiveStore = 'all';
+            function filterPosStore(storeId, btn) {
+                _posActiveStore = storeId;
+                document.querySelectorAll('.pos-store-tab').forEach(function(t){ t.classList.remove('active'); });
+                btn.classList.add('active');
+                filterPosProducts();
+            }
+            function filterPosProducts() {
+                var q = (document.getElementById('posSearchInput').value || '').toLowerCase();
+                var cards = document.querySelectorAll('[data-product-card]');
+                var visible = 0;
+                cards.forEach(function(card) {
+                    var storeMatch = _posActiveStore === 'all' || card.dataset.store === _posActiveStore;
+                    var searchMatch = !q || card.dataset.search.includes(q);
+                    card.hidden = !(storeMatch && searchMatch);
+                    if (!card.hidden) visible++;
+                });
+                document.getElementById('posNoResults').hidden = visible > 0;
+            }
+            </script>
         </section>
 
         <aside class="card" id="posPanelCart">
