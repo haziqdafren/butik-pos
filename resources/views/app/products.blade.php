@@ -108,22 +108,35 @@
     <section class="card" style="margin-top:16px">
         <div class="toolbar" style="justify-content:space-between;align-items:center;margin-bottom:12px">
             <h3 style="margin:0">Stok Barang</h3>
-            <form method="get" action="{{ route('products.index') }}" class="filter-bar" style="margin-bottom:0">
-                <input class="input" type="search" name="search" value="{{ $search ?? '' }}" placeholder="Cari nama, SKU, kategori...">
-                <button class="button secondary" type="submit">Cari</button>
-                @if($search)
+            <form method="get" action="{{ route('products.index') }}" class="filter-bar" style="margin-bottom:0;flex-wrap:wrap;gap:6px">
+                <input class="input" type="search" name="search" value="{{ $search ?? '' }}" placeholder="Cari nama, SKU...">
+                <select class="input" name="store_filter" style="max-width:130px">
+                    <option value="">Semua Toko</option>
+                    @foreach($stores as $st)
+                        <option value="{{ $st->id }}" @selected(request('store_filter') == $st->id)>{{ $st->name }}</option>
+                    @endforeach
+                </select>
+                <select class="input" name="category_filter" style="max-width:140px">
+                    <option value="">Semua Kategori</option>
+                    @foreach($categories as $cat)
+                        <option value="{{ $cat }}" @selected(request('category_filter') === $cat)>{{ ucfirst($cat) }}</option>
+                    @endforeach
+                </select>
+                <button class="button secondary" type="submit">Filter</button>
+                @if($search || request('store_filter') || request('category_filter'))
                     <a href="{{ route('products.index') }}" class="button secondary">Reset</a>
                 @endif
             </form>
         </div>
         <div class="table-wrap">
             <table>
-                <thead><tr><th class="col-hide-mobile">SKU</th><th>Nama</th><th>Kategori</th><th class="col-hide-mobile">Warna</th><th class="col-hide-mobile">Ukuran</th><th>Stok</th><th class="col-hide-mobile">Modal</th><th>Jual</th><th></th></tr></thead>
+                <thead><tr><th class="col-hide-mobile">SKU</th><th>Nama</th><th>Toko</th><th>Kategori</th><th class="col-hide-mobile">Warna</th><th class="col-hide-mobile">Ukuran</th><th>Stok</th><th class="col-hide-mobile">Modal</th><th>Jual</th><th></th></tr></thead>
                 <tbody>
                 @forelse($products as $product)
                     <tr>
                         <td class="col-hide-mobile" style="font-size:11px;color:var(--muted)">{{ $product->sku }}</td>
                         <td>{{ $product->name }}</td>
+                        <td style="font-size:12px;color:var(--muted)">{{ $product->store?->name }}</td>
                         <td>{{ $product->category }}</td>
                         <td class="col-hide-mobile">{{ $product->color }}</td>
                         <td class="col-hide-mobile">{{ $product->size }}</td>

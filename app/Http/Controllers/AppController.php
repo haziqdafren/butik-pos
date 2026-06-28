@@ -148,7 +148,9 @@ class AppController extends Controller
 
     public function products(): View
     {
-        $search = request('search');
+        $search          = request('search');
+        $storeFilter     = request('store_filter');
+        $categoryFilter  = request('category_filter');
 
         $products = Product::query()
             ->with('store')
@@ -160,6 +162,8 @@ class AppController extends Controller
                       ->orWhere('color', 'like', "%{$search}%");
                 });
             })
+            ->when($storeFilter, fn($q, $v) => $q->where('store_id', $v))
+            ->when($categoryFilter, fn($q, $v) => $q->where('category', $v))
             ->latest()
             ->paginate(25)
             ->withQueryString();

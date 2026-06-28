@@ -96,10 +96,11 @@
 <div class="receipt">
     {{-- Header --}}
     <div class="center bold" style="font-size:13px; margin-bottom:2px">
-        {{ $settings['store_name'] ?: config('app.name', 'Butik POS') }}
+        {{ $sale->store?->name ?: ($settings['store_name'] ?: config('app.name', 'Butik POS')) }}
     </div>
-    @if(!empty($settings['store_address']))
-        <div class="center muted" style="font-size:10px">{{ $settings['store_address'] }}</div>
+    @php $storeAddress = $sale->store?->address ?: $settings['store_address']; @endphp
+    @if(!empty($storeAddress))
+        <div class="center muted" style="font-size:10px">{{ $storeAddress }}</div>
     @endif
     @if(!empty($settings['store_phone']))
         <div class="center muted" style="font-size:10px">{{ $settings['store_phone'] }}</div>

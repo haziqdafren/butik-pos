@@ -61,9 +61,9 @@
             <script>
             var _posActiveStore = 'all';
             function filterPosStore(storeId, btn) {
-                _posActiveStore = storeId;
+                _posActiveStore = String(storeId);
                 document.querySelectorAll('.pos-store-tab').forEach(function(t){ t.classList.remove('active'); });
-                btn.classList.add('active');
+                if (btn) btn.classList.add('active');
                 filterPosProducts();
             }
             function filterPosProducts() {
@@ -78,6 +78,14 @@
                 });
                 document.getElementById('posNoResults').hidden = visible > 0;
             }
+            // Auto-select cashier's own store on load
+            document.addEventListener('DOMContentLoaded', function() {
+                var myStore = '{{ auth()->user()->store_id }}';
+                if (myStore) {
+                    var tab = document.querySelector('.pos-store-tab[data-store="' + myStore + '"]');
+                    if (tab) filterPosStore(myStore, tab);
+                }
+            });
             </script>
         </section>
 
