@@ -77,8 +77,22 @@ try {
 }
 flush();
 
-// ── Step 4: Migrations ───────────────────────────────────────────────────────
-echo "[ STEP 4 ] Running migrations ...\n";
+// ── Step 4: Wipe & recreate database ────────────────────────────────────────
+echo "[ STEP 4 ] Wiping existing database ...\n";
+$dbPath = $root . '/database/database.sqlite';
+if (file_exists($dbPath)) {
+    unlink($dbPath);
+    echo "  DELETED: database.sqlite\n";
+} else {
+    echo "  SKIP: no existing database.sqlite found\n";
+}
+touch($dbPath);
+chmod($dbPath, 0664);
+echo "  CREATED: fresh empty database.sqlite\n\n";
+flush();
+
+// ── Step 5: Migrations ───────────────────────────────────────────────────────
+echo "[ STEP 5 ] Running migrations ...\n";
 try {
     $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
     $kernel->bootstrap();
@@ -90,8 +104,8 @@ try {
 }
 flush();
 
-// ── Step 5: Seed ─────────────────────────────────────────────────────────────
-echo "[ STEP 5 ] Seeding database ...\n";
+// ── Step 6: Seed (stores + users only, no dummy products) ───────────────────
+echo "[ STEP 6 ] Seeding database ...\n";
 try {
     $status = Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
     echo Illuminate\Support\Facades\Artisan::output();
@@ -101,9 +115,9 @@ try {
 }
 flush();
 
-// ── Step 6: Clear old cache then re-cache ────────────────────────────────────
-echo "[ STEP 6 ] Caching config / routes / views ...\n";
-foreach (['config:clear','route:clear','view:clear','config:cache','route:cache','view:cache'] as $cmd) {
+// ── Step 7: Clear old cache then re-cache ────────────────────────────────────
+echo "[ STEP 7 ] Caching config / routes / views ...\n";
+foreach (['config:clear', 'route:clear', 'view:clear', 'config:cache', 'route:cache', 'view:cache'] as $cmd) {
     try {
         Illuminate\Support\Facades\Artisan::call($cmd);
         echo "  OK: $cmd\n";
