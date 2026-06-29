@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $title ?? 'Butik POS' }}</title>
-    <link rel="stylesheet" href="{{ asset('css/pos.css') }}?v=20260628">
+    <link rel="stylesheet" href="{{ asset('css/pos.css') }}?v=20260629">
 </head>
 <body>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
@@ -125,8 +125,8 @@
             </div>
         </div>
     </div>
-<script src="{{ asset('js/pos.js') }}?v=20260628"></script>
-<script src="{{ asset('js/pricing.js') }}?v=20260628"></script>
+<script src="{{ asset('js/pos.js') }}?v=20260629"></script>
+<script src="{{ asset('js/pricing.js') }}?v=20260629"></script>
 <script>
 // ── Sidebar drawer ──────────────────────────────────────────
 function toggleSidebar() {
