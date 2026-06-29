@@ -29,6 +29,12 @@
     <div class="pos-grid">
         <section id="posPanelProducts" class="pos-panel-active">
             {{-- Store filter tabs --}}
+            <style>
+            #posStoreTabs { display:flex; gap:4px; flex-wrap:wrap; margin-bottom:12px; background:#f4f7f9; border:1px solid #dfe5eb; border-radius:10px; padding:4px; }
+            #posStoreTabs .pos-store-tab { padding:7px 18px; border:none !important; border-radius:7px; background:transparent; font-size:13px; font-weight:600; color:#67727f; cursor:pointer; transition:background .15s,color .15s,box-shadow .15s; white-space:nowrap; }
+            #posStoreTabs .pos-store-tab:hover { color:#1d242c; background:rgba(255,255,255,.7); }
+            #posStoreTabs .pos-store-tab.active { background:white !important; color:#b2472f !important; box-shadow:0 1px 4px rgba(16,33,41,.12); }
+            </style>
             <div class="pos-store-tabs" id="posStoreTabs">
                 <button class="pos-store-tab active" data-store="all" onclick="filterPosStore('all',this)">🏪 Semua Toko</button>
                 @foreach($stores as $store)
