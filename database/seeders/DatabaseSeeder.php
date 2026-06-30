@@ -19,12 +19,12 @@ class DatabaseSeeder extends Seeder
     {
         $store = Store::query()->firstOrCreate(
             ['code' => 'BTK'],
-            ['name' => 'Butik 1', 'address' => 'Jl. Sudirman No. 12']
+            ['name' => 'Kasablanka Butik 1', 'address' => 'Jl. Sudirman No. 12']
         );
 
         Store::query()->firstOrCreate(
             ['code' => 'BTK2'],
-            ['name' => 'Butik 2', 'address' => '']
+            ['name' => 'Kasablanka Butik 2', 'address' => '']
         );
 
         User::query()->firstOrCreate([
