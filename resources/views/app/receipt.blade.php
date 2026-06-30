@@ -60,26 +60,29 @@
         .btn-print { background: #b2472f; color: white; }
         .btn-close { background: #67727f; color: white; }
 
-        /* ── Print: Blueprint Lite 58D — 57.5mm paper, 48mm printable (384 dots) ── */
+        /* ── Print: 78mm paper, 60mm printable ── */
         @media print {
             body {
                 background: white;
                 padding: 0;
                 margin: 0;
                 display: block;
+                font-weight: bold !important;
             }
             .receipt {
-                width: 48mm;
+                width: 60mm;
                 margin: 0;
                 padding: 1mm 0;
                 border: none;
                 box-shadow: none;
-                font-size: 10.5px;
+                font-size: 11px;
+                font-weight: bold !important;
             }
+            .receipt * { font-weight: bold !important; }
             .no-print { display: none !important; }
             @page {
-                size: 57.5mm auto;
-                margin: 0 4.75mm;
+                size: 78mm auto;
+                margin: 0 9mm;
             }
         }
     </style>
