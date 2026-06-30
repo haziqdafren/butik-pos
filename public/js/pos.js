@@ -415,63 +415,19 @@ function copyProductRow(btn) {
     var sourceRow = btn.closest('tr');
     if (!sourceRow) return;
 
-    // Collect all values from source row — including hidden inputs (money mask moves name there)
-    var vals = {};
-    sourceRow.querySelectorAll('input, select').forEach(function(el) {
-        var name = el.name || el.dataset.maskedName || '';
-        if (!name) return;
-        var key = name.replace(/^rows\[\d+\]\[/, '').replace(/\]$/, '');
-        // For masked inputs, prefer the hidden sibling's raw value
-        if (el.dataset.maskFor) {
-            vals[el.dataset.maskFor.replace(/^rows\[\d+\]\[/, '').replace(/\]$/, '')] = el.value;
-        } else {
-            vals[key] = el.value;
-        }
+    // Deep clone the row as-is (includes all current values and mask state)
+    var newRow = sourceRow.cloneNode(true);
+    var newIdx = tbody.querySelectorAll('tr').length;
+
+    // Re-index all name attributes to avoid duplicate field names
+    newRow.querySelectorAll('[name]').forEach(function(el) {
+        el.name = el.name.replace(/rows\[\d+\]/, 'rows[' + newIdx + ']');
     });
 
-    // Also grab visible display values for text fields (name, color, supplier etc)
-    sourceRow.querySelectorAll('input[data-mask-attached]').forEach(function(el) {
-        // find the hidden sibling
-        var hidden = el.parentNode.querySelector('input[type="hidden"][data-mask-for]');
-        if (hidden) {
-            var key = hidden.dataset.maskFor.replace(/^rows\[\d+\]\[/, '').replace(/\]$/, '');
-            vals[key] = hidden.value; // raw numeric value
-        }
+    // Also re-index data-mask-for attributes on hidden inputs
+    newRow.querySelectorAll('[data-mask-for]').forEach(function(el) {
+        el.dataset.maskFor = el.dataset.maskFor.replace(/rows\[\d+\]/, 'rows[' + newIdx + ']');
     });
 
-    // Call addProductRow to create a clean new row
-    addProductRow();
-
-    // Get the new row
-    var rows = tbody.querySelectorAll('tr');
-    var newRow = rows[rows.length - 1];
-
-    // Fill values after masking has settled
-    setTimeout(function() {
-        // Fill regular inputs and selects
-        newRow.querySelectorAll('input[name], select[name]').forEach(function(el) {
-            var key = el.name.replace(/^rows\[\d+\]\[/, '').replace(/\]$/, '');
-            if (vals[key] !== undefined && vals[key] !== '') {
-                el.value = vals[key];
-                el.dispatchEvent(new Event('change', { bubbles: true }));
-                el.dispatchEvent(new Event('input', { bubbles: true }));
-            }
-        });
-
-        // Fill masked money inputs using setRaw
-        newRow.querySelectorAll('input[data-mask-attached]').forEach(function(el) {
-            var hidden = el.parentNode.querySelector('input[type="hidden"][data-mask-for]');
-            if (!hidden) return;
-            var key = hidden.dataset.maskFor.replace(/^rows\[\d+\]\[/, '').replace(/\]$/, '');
-            if (vals[key] !== undefined && vals[key] !== '') {
-                if (typeof el.setRaw === 'function') {
-                    el.setRaw(vals[key]);
-                } else {
-                    el.value = vals[key];
-                    hidden.value = vals[key];
-                }
-                el.dispatchEvent(new Event('input', { bubbles: true }));
-            }
-        });
-    }, 100);
+    tbody.appendChild(newRow);
 }
