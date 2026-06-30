@@ -8,23 +8,24 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Courier New', Courier, monospace;
             font-size: 11px;
-            line-height: 1.4;
-            background: #f0f0f0;
+            line-height: 1.45;
+            background: #e8e8e8;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 16px;
+            padding: 20px 16px;
             min-height: 100vh;
         }
 
-        /* Screen preview: fixed pixel width so it's readable in browser */
+        /* Screen preview — matches 48mm printable area at 96dpi */
         .receipt {
             background: white;
-            width: 192px; /* approx 48mm @ 96dpi */
-            padding: 8px 6px;
-            border: 1px solid #ccc;
+            width: 181px; /* 48mm @ 96dpi */
+            padding: 8px 4px;
+            border: 1px solid #bbb;
+            box-shadow: 0 2px 8px rgba(0,0,0,.12);
         }
 
         .center  { text-align: center; }
@@ -32,44 +33,34 @@
         .right   { text-align: right; }
         .muted   { color: #555; }
 
-        .divider       { border: none; border-top: 1px dashed #888; margin: 4px 0; }
-        .divider-solid { border: none; border-top: 1px solid #222; margin: 4px 0; }
+        .divider       { border: none; border-top: 1px dashed #888; margin: 3px 0; }
+        .divider-solid { border: none; border-top: 1px solid #222; margin: 3px 0; }
 
-        /* Two-column row: label left, value right */
-        .row { display: flex; justify-content: space-between; margin: 2px 0; }
+        /* Two-column row */
+        .row { display: flex; justify-content: space-between; margin: 1px 0; }
         .row .label { white-space: nowrap; margin-right: 4px; flex-shrink: 0; }
-        .row .value { text-align: right; word-break: break-all; }
+        .row .value { text-align: right; word-break: break-word; }
 
         /* Item table */
         .items-table { width: 100%; border-collapse: collapse; margin: 2px 0; }
         .items-table td { vertical-align: top; padding: 1px 0; font-size: 11px; }
-        .col-name  { width: 55%; }
-        .col-qty   { width: 15%; text-align: center; }
-        .col-price { width: 30%; text-align: right; }
+        .col-name  { width: 52%; }
+        .col-qty   { width: 13%; text-align: center; }
+        .col-price { width: 35%; text-align: right; }
 
-        .item-attrs { color: #666; font-size: 10px; }
+        .item-attrs { color: #666; font-size: 9.5px; }
 
         .total-row { display: flex; justify-content: space-between; font-weight: bold; font-size: 12px; margin: 2px 0; }
 
         .footer-msg { text-align: center; margin-top: 6px; font-size: 10px; }
 
-        /* Screen-only buttons */
-        .no-print {
-            margin-top: 16px;
-            display: flex;
-            gap: 8px;
-        }
-        .btn {
-            padding: 8px 16px;
-            border: 0;
-            border-radius: 6px;
-            cursor: pointer;
-            font-family: inherit;
-            font-size: 13px;
-        }
+        /* Screen buttons */
+        .no-print { margin-top: 16px; display: flex; gap: 8px; }
+        .btn { padding: 8px 16px; border: 0; border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 13px; }
         .btn-print { background: #b2472f; color: white; }
         .btn-close { background: #67727f; color: white; }
 
+        /* ── Print: Blueprint Lite 58D, 58mm roll, ~48mm printable ── */
         @media print {
             body {
                 background: white;
@@ -78,15 +69,16 @@
                 display: block;
             }
             .receipt {
-                width: 47mm;
+                width: 48mm;
                 margin: 0;
-                padding: 0;
+                padding: 1mm 0;
                 border: none;
+                box-shadow: none;
             }
             .no-print { display: none !important; }
             @page {
                 size: 58mm auto;
-                margin: 0 5.5mm;
+                margin: 0 5mm;
             }
         }
     </style>
