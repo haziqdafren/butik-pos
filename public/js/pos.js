@@ -411,42 +411,64 @@ function removeProductRow(btn) {
 
 function copyProductRow(btn) {
     var tbody = document.getElementById('bulk-tbody');
+    if (!tbody) return;
     var sourceRow = btn.closest('tr');
+    if (!sourceRow) return;
+
+    // Snapshot values from source row before cloning
+    var snapshot = {};
+    sourceRow.querySelectorAll('input, select').forEach(function(el) {
+        if (el.name) snapshot[el.name] = el.value;
+    });
+    var selectValues = [];
+    sourceRow.querySelectorAll('select').forEach(function(s) {
+        selectValues.push(s.value);
+    });
+
+    // Clone the source row
     var newRow = sourceRow.cloneNode(true);
 
-    // Remove money-mask hidden inputs injected by attachRupiahMask
-    newRow.querySelectorAll('input[type="hidden"][data-mask-for]').forEach(function(h) {
-        h.remove();
-    });
-
-    // Reset masking flags on cloned inputs so initMoneyInputs re-attaches cleanly
+    // Strip mask artifacts
+    newRow.querySelectorAll('input[type="hidden"][data-mask-for]').forEach(function(h) { h.remove(); });
     newRow.querySelectorAll('input[data-mask-attached]').forEach(function(i) {
-        var origName = i.dataset.maskedName || '';
-        if (origName) i.name = origName;
-        delete i.dataset.maskAttached;
-        delete i.dataset.maskedName;
+        var orig = i.dataset.maskedName || '';
+        if (orig) i.name = orig;
+        i.removeAttribute('data-mask-attached');
+        i.removeAttribute('data-masked-name');
         i.type = 'number';
-        // Keep the value so it copies the source row's cost
     });
 
-    // Re-index all name attributes
-    var idx = tbody.querySelectorAll('tr').length;
+    // Re-index names
+    var newIdx = tbody.querySelectorAll('tr').length;
     newRow.querySelectorAll('[name]').forEach(function(el) {
-        el.name = el.name.replace(/rows\[\d+\]/, 'rows[' + idx + ']');
+        el.name = el.name.replace(/rows\[\d+\]/, 'rows[' + newIdx + ']');
     });
 
-    // Sync size hidden input to match current select value
+    tbody.appendChild(newRow);
+
+    // Re-attach masking and pricing
+    if (typeof initMoneyInputs === 'function') initMoneyInputs(newRow);
+    if (typeof initBulkRow === 'function') initBulkRow(newRow);
+
+    // Restore snapshotted values (masking may have cleared them)
+    newRow.querySelectorAll('input, select').forEach(function(el) {
+        var srcName = el.name ? el.name.replace(/rows\[\d+\]/, 'rows[' + (newIdx - 1) + ']') : '';
+        if (srcName && snapshot[srcName] !== undefined) {
+            el.value = snapshot[srcName];
+        }
+    });
+
+    // Restore selects by position as fallback
+    newRow.querySelectorAll('select').forEach(function(s, i) {
+        if (selectValues[i] !== undefined) s.value = selectValues[i];
+    });
+
+    // Sync size hidden to select
     var sizeSelect = newRow.querySelector('[data-size-select]');
     var sizeHidden = newRow.querySelector('input[type="hidden"][name$="[size]"]');
     if (sizeSelect && sizeHidden) sizeHidden.value = sizeSelect.value;
 
-    // Clear selling price preview text
+    // Clear preview text
     var preview = newRow.querySelector('[data-bulk-price-preview]');
     if (preview) preview.textContent = '';
-
-    tbody.appendChild(newRow);
-
-    // Re-attach money masking and auto-pricing for the new row
-    initMoneyInputs(newRow);
-    if (window.initBulkRow) initBulkRow(newRow);
 }
