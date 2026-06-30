@@ -1,9 +1,9 @@
 <x-layouts.app title="History Transaksi Kasir">
     <section class="card">
         <div class="toolbar" style="justify-content:space-between; align-items:center">
-            <h3 style="margin:0">Transaksi Saya</h3>
+            <h3 style="margin:0">Semua Transaksi</h3>
         </div>
-        <p class="muted">Jika ada kesalahan input, klik <strong>Batalkan</strong> dan isi alasan dengan jelas. Transaksi akan langsung dibatalkan dan stok dikembalikan.</p>
+        <p class="muted">Semua transaksi dari semua kasir. Jika ada kesalahan input, klik <strong>Batalkan</strong> dan isi alasan dengan jelas. Transaksi akan langsung dibatalkan dan stok dikembalikan.</p>
         <form method="get" action="{{ route('cashier.history') }}" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
             <input class="input" type="search" name="search" value="{{ $search ?? '' }}" placeholder="Cari no. invoice..." style="min-width:180px">
             <input class="input" type="date" name="date_from" value="{{ $dateFrom ?? '' }}" style="width:140px">
