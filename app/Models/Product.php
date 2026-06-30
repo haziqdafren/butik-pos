@@ -49,21 +49,10 @@ class Product extends Model
         return 'ok';
     }
 
-    public function stockBadgeClass(): string
+    public function stockColor(): string
     {
-        return match ($this->stockStatus()) {
-            'out'   => 'red',
-            'low'   => 'amber',
-            default => 'green',
-        };
-    }
-
-    public function stockLabel(): string
-    {
-        return match ($this->stockStatus()) {
-            'out'   => 'Habis',
-            'low'   => 'Sedikit',
-            default => 'Stok ' . $this->stock,
-        };
+        if ($this->stock <= 3) return '#b42318';
+        if ($this->stock <= 5) return '#b86b00';
+        return '#177245';
     }
 }

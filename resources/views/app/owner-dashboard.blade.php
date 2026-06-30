@@ -105,7 +105,7 @@
                         <small class="sku-line">{{ $product->sku }} · {{ $product->store->name }}</small>
                         <small>Supplier: {{ $product->supplier ?: '-' }}</small>
                     </div>
-                    <span class="badge {{ $product->stockBadgeClass() }}" style="flex-shrink:0">{{ $product->stockLabel() }}</span>
+                    <strong style="color:{{ $product->stockColor() }};font-size:15px;flex-shrink:0">{{ $product->stock }}</strong>
                 </div>
             @empty
                 <p class="muted">Semua stok masih aman.</p>

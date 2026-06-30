@@ -16,13 +16,14 @@
         <div class="table-wrap">
             <table>
                 <thead>
-                <tr><th>Invoice</th><th>Waktu</th><th>Item</th><th>Diskon</th><th>Total</th><th>Status</th><th>Aksi</th></tr>
+                <tr><th>Invoice</th><th>Waktu</th><th>Toko</th><th>Item</th><th>Diskon</th><th>Total</th><th>Status</th><th>Aksi</th></tr>
                 </thead>
                 <tbody>
                 @forelse($sales as $sale)
                     <tr>
                         <td>{{ $sale->invoice_number }}</td>
                         <td>{{ $sale->created_at->format('d/m/Y H:i') }}</td>
+                        <td style="font-size:12px;color:var(--muted)">{{ $sale->store?->name ?? '-' }}</td>
                         <td>{{ $sale->items->sum('qty') }}</td>
                         <td>Rp {{ number_format($sale->discount_amount, 0, ',', '.') }}</td>
                         <td class="money">Rp {{ number_format($sale->total, 0, ',', '.') }}</td>

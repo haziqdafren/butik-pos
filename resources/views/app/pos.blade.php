@@ -58,7 +58,7 @@
                         <strong>{{ $product->name }}</strong>
                         <small>{{ $product->category }}{{ $product->color ? ' · '.$product->color : '' }}{{ $product->size ? ' · '.$product->size : '' }}</small>
                         <p class="money">Rp {{ number_format($product->selling_price, 0, ',', '.') }}</p>
-                        <span class="badge {{ $product->stockBadgeClass() }}">{{ $product->stockLabel() }}</span>
+                        <span style="color:{{ $product->stockColor() }};font-weight:700">{{ $product->stock }}</span>
                     </button>
                 @endforeach
             </div>

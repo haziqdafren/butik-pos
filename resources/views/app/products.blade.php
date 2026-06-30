@@ -140,7 +140,7 @@
                         <td>{{ $product->category }}</td>
                         <td class="col-hide-mobile">{{ $product->color }}</td>
                         <td class="col-hide-mobile">{{ $product->size }}</td>
-                        <td><span class="badge {{ $product->stockBadgeClass() }}">{{ $product->stockLabel() }}</span></td>
+                        <td><strong style="color:{{ $product->stockColor() }};font-size:15px">{{ $product->stock }}</strong></td>
                         <td class="col-hide-mobile">Rp {{ number_format($product->cost_price, 0, ',', '.') }}</td>
                         <td>Rp {{ number_format($product->selling_price, 0, ',', '.') }}</td>
                         <td class="product-action-cell">

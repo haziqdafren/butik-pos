@@ -46,7 +46,7 @@
                         <td class="col-hide-mobile">Rp {{ number_format($product->cost_price, 0, ',', '.') }}</td>
                         <td class="col-hide-mobile">Rp {{ number_format($product->selling_price, 0, ',', '.') }}</td>
                         <td><strong>{{ $product->stock }}</strong></td>
-                        <td><span class="badge {{ $product->stockBadgeClass() }}">{{ $product->stockLabel() }}</span></td>
+                        <td><strong style="color:{{ $product->stockColor() }};font-size:15px">{{ $product->stock }}</strong></td>
                     </tr>
                 @empty
                     <tr><td colspan="10" class="muted">Tidak ada produk ditemukan.</td></tr>

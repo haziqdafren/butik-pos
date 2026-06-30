@@ -130,7 +130,7 @@ class AppController extends Controller
         $dateTo   = request('date_to');
 
         $sales = Sale::query()
-            ->with('items', 'discount', 'corrections.requester', 'cashier:id,name')
+            ->with('items', 'discount', 'corrections.requester', 'cashier:id,name', 'store:id,name')
             ->where('store_id', auth()->user()->store_id)
             ->when($search, fn($q, $search) => $q->where('invoice_number', 'like', "%{$search}%"))
             ->when($dateFrom, fn($q, $d) => $q->whereDate('created_at', '>=', $d))
