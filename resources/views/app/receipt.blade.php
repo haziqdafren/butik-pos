@@ -62,9 +62,9 @@
         .btn-print { background: #b2472f; color: white; }
         .btn-close { background: #67727f; color: white; }
 
-        /* ── Print: 58mm thermal roll (Blueprint Lite 58D) ── */
+        /* ── Print: 58mm, exact height set by JS before print ── */
         @page {
-            size: 58mm auto;
+            size: 58mm 150mm; /* fallback, overridden by JS */
             margin: 0;
         }
 
@@ -206,6 +206,23 @@
         var bc = document.getElementById('btnClose');
         if (bc) bc.style.display = 'none';
     }
+
+    // Measure exact receipt height and set @page size to eliminate blank bottom
+    function setExactPageSize() {
+        var receipt = document.querySelector('.receipt');
+        if (!receipt) return;
+        var heightMm = Math.ceil(receipt.getBoundingClientRect().height * 25.4 / 96) + 4;
+        var style = document.getElementById('dynamic-page-size');
+        if (!style) {
+            style = document.createElement('style');
+            style.id = 'dynamic-page-size';
+            document.head.appendChild(style);
+        }
+        style.textContent = '@page { size: 58mm ' + heightMm + 'mm; margin: 0; }';
+    }
+
+    window.addEventListener('load', setExactPageSize);
+    window.addEventListener('beforeprint', setExactPageSize);
 </script>
 
 <script>
