@@ -60,7 +60,7 @@
         .btn-print { background: #b2472f; color: white; }
         .btn-close { background: #67727f; color: white; }
 
-        /* ── Print: 78mm paper, 60mm printable ── */
+        /* ── Print: 80mm continuous roll ── */
         @media print {
             body {
                 background: white;
@@ -70,19 +70,19 @@
                 font-weight: bold !important;
             }
             .receipt {
-                width: 60mm;
+                width: 72mm;
                 margin: 0;
-                padding: 1mm 0;
+                padding: 2mm 0;
                 border: none;
                 box-shadow: none;
-                font-size: 14px;
+                font-size: 16px;
                 font-weight: bold !important;
             }
-            .receipt * { font-weight: bold !important; }
+            .receipt * { font-weight: bold !important; font-size: inherit; }
             .no-print { display: none !important; }
             @page {
-                size: 78mm auto;
-                margin: 0 9mm;
+                size: 80mm auto;
+                margin: 0 4mm;
             }
         }
     </style>
