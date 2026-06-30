@@ -415,60 +415,29 @@ function copyProductRow(btn) {
     var sourceRow = btn.closest('tr');
     if (!sourceRow) return;
 
-    // Snapshot values from source row before cloning
-    var snapshot = {};
-    sourceRow.querySelectorAll('input, select').forEach(function(el) {
-        if (el.name) snapshot[el.name] = el.value;
-    });
-    var selectValues = [];
-    sourceRow.querySelectorAll('select').forEach(function(s) {
-        selectValues.push(s.value);
+    // Step 1: collect field values from source row by field key (strip row index)
+    var vals = {};
+    sourceRow.querySelectorAll('input[name], select[name]').forEach(function(el) {
+        var key = el.name.replace(/^rows\[\d+\]\[/, '').replace(/\]$/, '');
+        vals[key] = el.value;
     });
 
-    // Clone the source row
-    var newRow = sourceRow.cloneNode(true);
+    // Step 2: use addProductRow() to create a clean, properly-masked new row
+    addProductRow();
 
-    // Strip mask artifacts
-    newRow.querySelectorAll('input[type="hidden"][data-mask-for]').forEach(function(h) { h.remove(); });
-    newRow.querySelectorAll('input[data-mask-attached]').forEach(function(i) {
-        var orig = i.dataset.maskedName || '';
-        if (orig) i.name = orig;
-        i.removeAttribute('data-mask-attached');
-        i.removeAttribute('data-masked-name');
-        i.type = 'number';
-    });
+    // Step 3: grab the newly added row (last row in tbody)
+    var rows = tbody.querySelectorAll('tr');
+    var newRow = rows[rows.length - 1];
 
-    // Re-index names
-    var newIdx = tbody.querySelectorAll('tr').length;
-    newRow.querySelectorAll('[name]').forEach(function(el) {
-        el.name = el.name.replace(/rows\[\d+\]/, 'rows[' + newIdx + ']');
-    });
-
-    tbody.appendChild(newRow);
-
-    // Re-attach masking and pricing
-    if (typeof initMoneyInputs === 'function') initMoneyInputs(newRow);
-    if (typeof initBulkRow === 'function') initBulkRow(newRow);
-
-    // Restore snapshotted values (masking may have cleared them)
-    newRow.querySelectorAll('input, select').forEach(function(el) {
-        var srcName = el.name ? el.name.replace(/rows\[\d+\]/, 'rows[' + (newIdx - 1) + ']') : '';
-        if (srcName && snapshot[srcName] !== undefined) {
-            el.value = snapshot[srcName];
+    // Step 4: fill in values from source, skipping color (user changes this)
+    newRow.querySelectorAll('input[name], select[name]').forEach(function(el) {
+        var key = el.name.replace(/^rows\[\d+\]\[/, '').replace(/\]$/, '');
+        if (key === 'color') return; // leave blank so user can fill in
+        if (vals[key] !== undefined) {
+            el.value = vals[key];
+            // Trigger change event so selects update dependent fields
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+            el.dispatchEvent(new Event('input', { bubbles: true }));
         }
     });
-
-    // Restore selects by position as fallback
-    newRow.querySelectorAll('select').forEach(function(s, i) {
-        if (selectValues[i] !== undefined) s.value = selectValues[i];
-    });
-
-    // Sync size hidden to select
-    var sizeSelect = newRow.querySelector('[data-size-select]');
-    var sizeHidden = newRow.querySelector('input[type="hidden"][name$="[size]"]');
-    if (sizeSelect && sizeHidden) sizeHidden.value = sizeSelect.value;
-
-    // Clear preview text
-    var preview = newRow.querySelector('[data-bulk-price-preview]');
-    if (preview) preview.textContent = '';
 }
