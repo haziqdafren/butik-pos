@@ -78,15 +78,15 @@
                 display: block;
             }
             .receipt {
-                width: 48mm;
-                margin: 0 auto;
-                padding: 2mm;
+                width: 47mm;
+                margin: 0;
+                padding: 0;
                 border: none;
             }
             .no-print { display: none !important; }
             @page {
                 size: 58mm auto;
-                margin: 0;
+                margin: 0 5.5mm;
             }
         }
     </style>
