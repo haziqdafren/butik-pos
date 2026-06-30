@@ -130,8 +130,8 @@ class AppController extends Controller
         $dateTo   = request('date_to');
 
         $sales = Sale::query()
-            ->with('items', 'discount', 'corrections.requester')
-            ->where('user_id', auth()->id())
+            ->with('items', 'discount', 'corrections.requester', 'cashier:id,name')
+            ->where('store_id', auth()->user()->store_id)
             ->when($search, fn($q, $search) => $q->where('invoice_number', 'like', "%{$search}%"))
             ->when($dateFrom, fn($q, $d) => $q->whereDate('created_at', '>=', $d))
             ->when($dateTo,   fn($q, $d) => $q->whereDate('created_at', '<=', $d))
@@ -256,7 +256,10 @@ class AppController extends Controller
 
     public function selfVoid(Request $request, Sale $sale, PosService $service): RedirectResponse
     {
-        abort_unless($sale->user_id === auth()->id(), 403);
+        abort_unless(
+            auth()->user()->isOwner() || $sale->user_id === auth()->id() || $sale->store_id === auth()->user()->store_id,
+            403
+        );
 
         $payload = $request->validate([
             'reason' => ['required', 'string', 'min:8', 'max:500'],
