@@ -8,9 +8,10 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 14px;
-            line-height: 1.5;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 15px;
+            font-weight: bold;
+            line-height: 1.6;
             background: #e8e8e8;
             display: flex;
             flex-direction: column;
@@ -19,40 +20,41 @@
             min-height: 100vh;
         }
 
-        /* Screen preview — matches 48mm printable area at 96dpi */
+        /* Screen preview */
         .receipt {
             background: white;
-            width: 181px; /* 48mm @ 96dpi */
-            padding: 8px 4px;
+            width: 220px;
+            padding: 10px 6px;
             border: 1px solid #bbb;
             box-shadow: 0 2px 8px rgba(0,0,0,.12);
+            font-weight: bold;
         }
 
         .center  { text-align: center; }
         .bold    { font-weight: bold; }
         .right   { text-align: right; }
-        .muted   { color: #555; }
+        .muted   { color: #333; }
 
-        .divider       { border: none; border-top: 1px dashed #888; margin: 3px 0; }
-        .divider-solid { border: none; border-top: 1px solid #222; margin: 3px 0; }
+        .divider       { border: none; border-top: 1px dashed #666; margin: 4px 0; }
+        .divider-solid { border: none; border-top: 2px solid #000; margin: 4px 0; }
 
         /* Two-column row */
-        .row { display: flex; justify-content: space-between; margin: 1px 0; }
+        .row { display: flex; justify-content: space-between; margin: 2px 0; font-weight: bold; }
         .row .label { white-space: nowrap; margin-right: 4px; flex-shrink: 0; }
         .row .value { text-align: right; word-break: break-word; }
 
         /* Item table */
-        .items-table { width: 100%; border-collapse: collapse; margin: 2px 0; }
-        .items-table td { vertical-align: top; padding: 1px 0; font-size: 14px; }
+        .items-table { width: 100%; border-collapse: collapse; margin: 3px 0; }
+        .items-table td { vertical-align: top; padding: 2px 0; font-weight: bold; }
         .col-name  { width: 52%; }
         .col-qty   { width: 13%; text-align: center; }
         .col-price { width: 35%; text-align: right; }
 
-        .item-attrs { color: #666; font-size: 12px; }
+        .item-attrs { color: #444; font-size: 12px; font-weight: bold; }
 
-        .total-row { display: flex; justify-content: space-between; font-weight: bold; font-size: 15px; margin: 2px 0; }
+        .total-row { display: flex; justify-content: space-between; font-weight: bold; font-size: 17px; margin: 3px 0; }
 
-        .footer-msg { text-align: center; margin-top: 6px; font-size: 13px; }
+        .footer-msg { text-align: center; margin-top: 8px; font-weight: bold; }
 
         /* Screen buttons */
         .no-print { margin-top: 16px; display: flex; gap: 8px; }
@@ -71,19 +73,23 @@
                 width: 58mm;
                 margin: 0;
                 padding: 0;
+                font-family: Arial, Helvetica, sans-serif;
+                font-weight: bold;
             }
 
             .receipt {
                 width: 58mm;
                 padding: 2mm;
                 box-sizing: border-box;
-                font-family: "Courier New", monospace;
-                font-size: 11px;
+                font-family: Arial, Helvetica, sans-serif;
+                font-size: 13px;
+                font-weight: bold;
                 border: none;
                 box-shadow: none;
             }
 
-            .receipt * { font-weight: bold !important; }
+            .receipt * { font-weight: bold !important; font-size: inherit; }
+            .total-row { font-size: 15px !important; }
 
             .no-print { display: none; }
         }
