@@ -283,18 +283,20 @@ class AppController extends Controller
     {
 
         $data = $request->validate([
-            'product_id' => ['required', 'exists:products,id'],
-            'qty' => ['required', 'integer', 'min:1'],
-            'unit_cost' => ['required', 'integer', 'min:0'],
-            'supplier' => ['nullable', 'string', 'max:120'],
-            'notes' => ['nullable', 'string', 'max:1000'],
+            'product_id'    => ['required', 'exists:products,id'],
+            'qty'           => ['required', 'integer', 'min:1'],
+            'unit_cost'     => ['required', 'integer', 'min:0'],
+            'selling_price' => ['required', 'integer', 'min:0'],
+            'supplier'      => ['nullable', 'string', 'max:120'],
+            'notes'         => ['nullable', 'string', 'max:1000'],
         ]);
 
         $product = Product::query()->findOrFail($data['product_id']);
         $product->increment('stock', $data['qty']);
         $product->update([
-            'cost_price' => $data['unit_cost'],
-            'supplier' => $data['supplier'] ?? $product->supplier,
+            'cost_price'    => $data['unit_cost'],
+            'selling_price' => $data['selling_price'],
+            'supplier'      => $data['supplier'] ?? $product->supplier,
         ]);
         $product->purchases()->create($data + ['user_id' => auth()->id()]);
 

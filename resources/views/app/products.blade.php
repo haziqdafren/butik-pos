@@ -168,7 +168,7 @@
 @foreach($products as $product)
     <input class="modal-toggle" type="checkbox" id="modal-restock-{{ $product->id }}">
     <div class="modal">
-        <div class="modal-card" style="max-width:420px">
+        <div class="modal-card" style="max-width:480px">
             <div class="modal-head">
                 <h3>Restock — {{ $product->name }}</h3>
                 <label class="button secondary mini" for="modal-restock-{{ $product->id }}">Tutup</label>
@@ -187,7 +187,19 @@
                         </div>
                         <div class="field">
                             <label>Harga Modal/pcs (Rp) <span style="color:red">*</span></label>
-                            <input class="input" type="number" name="unit_cost" min="0" required value="{{ $product->cost_price }}">
+                            <input class="input" type="number" name="unit_cost" min="0" required value="{{ $product->cost_price }}"
+                                oninput="restockCalc(this.closest('form'))">
+                        </div>
+                        <div class="field">
+                            <label>Ongkir/pcs (Rp)</label>
+                            <input class="input" type="number" min="0" value="{{ $product->category === 'jeans' ? 20000 : 15000 }}" placeholder="0"
+                                data-restock-shipping oninput="restockCalc(this.closest('form'))">
+                        </div>
+                        <div class="field">
+                            <label>Harga Jual (Rp) <span style="color:red">*</span></label>
+                            <input class="input" type="number" name="selling_price" min="0" required value="{{ $product->selling_price }}"
+                                data-restock-selling style="font-weight:700">
+                            <small class="muted" data-restock-preview style="font-size:11px;display:block;margin-top:2px"></small>
                         </div>
                         <div class="field" style="grid-column:span 2">
                             <label>Supplier</label>
@@ -207,6 +219,23 @@
         </div>
     </div>
 @endforeach
+
+<script>
+function restockCalc(form) {
+    var cost = parseFloat(form.querySelector('[name=unit_cost]').value) || 0;
+    var shipping = parseFloat(form.querySelector('[data-restock-shipping]').value) || 0;
+    var raw = (cost + shipping) * 1.5;
+    var rounded = Math.ceil(raw / 5000) * 5000;
+    var sellingInput = form.querySelector('[data-restock-selling]');
+    var preview = form.querySelector('[data-restock-preview]');
+    sellingInput.value = rounded;
+    if (rounded > 0) {
+        preview.textContent = '(Modal+Ongkir)×1.5 = Rp ' + rounded.toLocaleString('id-ID') + ' — bisa diubah manual';
+    } else {
+        preview.textContent = '';
+    }
+}
+</script>
 
 {{-- Edit product modals --}}
 @foreach($products as $product)
