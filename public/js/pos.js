@@ -429,13 +429,15 @@ function copyProductRow(btn) {
     var rows = tbody.querySelectorAll('tr');
     var newRow = rows[rows.length - 1];
 
-    // Step 4: fill in ALL values from source row
-    newRow.querySelectorAll('input[name], select[name]').forEach(function(el) {
-        var key = el.name.replace(/^rows\[\d+\]\[/, '').replace(/\]$/, '');
-        if (vals[key] !== undefined) {
-            el.value = vals[key];
-            el.dispatchEvent(new Event('change', { bubbles: true }));
-            el.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-    });
+    // Step 4: fill in ALL values after a tick so masking library has finished
+    setTimeout(function() {
+        newRow.querySelectorAll('input[name], select[name]').forEach(function(el) {
+            var key = el.name.replace(/^rows\[\d+\]\[/, '').replace(/\]$/, '');
+            if (vals[key] !== undefined && vals[key] !== '') {
+                el.value = vals[key];
+                el.dispatchEvent(new Event('change', { bubbles: true }));
+                el.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        });
+    }, 50);
 }
