@@ -394,7 +394,7 @@ class AppController extends Controller
     public function receipt(Request $request, Sale $sale, SettingsService $settings): View
     {
         abort_unless(
-            $sale->user_id === auth()->id() || auth()->user()->isOwner(),
+            auth()->user()->isOwner() || $sale->user_id === auth()->id() || $sale->store_id === auth()->user()->store_id,
             403
         );
 
