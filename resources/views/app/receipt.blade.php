@@ -9,8 +9,8 @@
 
         body {
             font-family: 'Courier New', Courier, monospace;
-            font-size: 11px;
-            line-height: 1.45;
+            font-size: 14px;
+            line-height: 1.5;
             background: #e8e8e8;
             display: flex;
             flex-direction: column;
@@ -43,16 +43,16 @@
 
         /* Item table */
         .items-table { width: 100%; border-collapse: collapse; margin: 2px 0; }
-        .items-table td { vertical-align: top; padding: 1px 0; font-size: 11px; }
+        .items-table td { vertical-align: top; padding: 1px 0; font-size: 14px; }
         .col-name  { width: 52%; }
         .col-qty   { width: 13%; text-align: center; }
         .col-price { width: 35%; text-align: right; }
 
-        .item-attrs { color: #666; font-size: 9.5px; }
+        .item-attrs { color: #666; font-size: 12px; }
 
-        .total-row { display: flex; justify-content: space-between; font-weight: bold; font-size: 12px; margin: 2px 0; }
+        .total-row { display: flex; justify-content: space-between; font-weight: bold; font-size: 15px; margin: 2px 0; }
 
-        .footer-msg { text-align: center; margin-top: 6px; font-size: 10px; }
+        .footer-msg { text-align: center; margin-top: 6px; font-size: 13px; }
 
         /* Screen buttons */
         .no-print { margin-top: 16px; display: flex; gap: 8px; }
@@ -75,7 +75,7 @@
                 padding: 1mm 0;
                 border: none;
                 box-shadow: none;
-                font-size: 11px;
+                font-size: 14px;
                 font-weight: bold !important;
             }
             .receipt * { font-weight: bold !important; }
@@ -91,7 +91,7 @@
 
 <div class="receipt">
     {{-- Header --}}
-    <div class="center bold" style="font-size:13px; margin-bottom:2px">
+    <div class="center bold" style="font-size:16px; margin-bottom:2px">
         {{ $sale->store?->name ?: ($settings['store_name'] ?: config('app.name', 'Butik POS')) }}
     </div>
     @php $storeAddress = $sale->store?->address ?: $settings['store_address']; @endphp
