@@ -61,31 +61,31 @@
         .btn-close { background: #67727f; color: white; }
 
         /* ── Print: 58mm thermal roll (Blueprint Lite 58D) ── */
+        @page {
+            size: 58mm auto;
+            margin: 0;
+        }
+
         @media print {
-            body {
-                background: white;
-                padding: 0;
+            html, body {
+                width: 58mm;
                 margin: 0;
-                display: block;
-                font-weight: bold !important;
+                padding: 0;
             }
+
             .receipt {
                 width: 58mm;
-                margin: 0 auto;
                 padding: 2mm;
+                box-sizing: border-box;
+                font-family: "Courier New", monospace;
+                font-size: 11px;
                 border: none;
                 box-shadow: none;
-                font-family: monospace;
-                font-size: 12px;
-                box-sizing: border-box;
-                font-weight: bold !important;
             }
-            .receipt * { font-weight: bold !important; font-size: inherit; }
-            .no-print { display: none !important; }
-            @page {
-                size: 58mm auto;
-                margin: 0;
-            }
+
+            .receipt * { font-weight: bold !important; }
+
+            .no-print { display: none; }
         }
     </style>
 </head>
