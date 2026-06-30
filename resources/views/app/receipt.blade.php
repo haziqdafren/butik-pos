@@ -60,7 +60,7 @@
         .btn-print { background: #b2472f; color: white; }
         .btn-close { background: #67727f; color: white; }
 
-        /* ── Print: 80mm continuous roll ── */
+        /* ── Print: 58mm thermal roll (Blueprint Lite 58D) ── */
         @media print {
             body {
                 background: white;
@@ -70,19 +70,21 @@
                 font-weight: bold !important;
             }
             .receipt {
-                width: 72mm;
-                margin: 0;
-                padding: 2mm 0;
+                width: 58mm;
+                margin: 0 auto;
+                padding: 2mm;
                 border: none;
                 box-shadow: none;
-                font-size: 16px;
+                font-family: monospace;
+                font-size: 12px;
+                box-sizing: border-box;
                 font-weight: bold !important;
             }
             .receipt * { font-weight: bold !important; font-size: inherit; }
             .no-print { display: none !important; }
             @page {
-                size: 80mm auto;
-                margin: 0 4mm;
+                size: 58mm auto;
+                margin: 0;
             }
         }
     </style>

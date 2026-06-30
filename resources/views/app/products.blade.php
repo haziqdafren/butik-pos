@@ -106,51 +106,6 @@
     </section>
 
     <section class="card" style="margin-top:16px">
-        <h3 style="margin:0 0 12px">Restock Barang</h3>
-        <p class="muted" style="margin-bottom:12px;font-size:13px">Pilih produk yang ingin ditambah stoknya. Stok otomatis bertambah dan harga modal diperbarui.</p>
-        <form method="post" action="{{ route('owner.restock') }}">
-            @csrf
-            <div class="grid-2" style="gap:12px">
-                <div class="field">
-                    <label>Produk <span style="color:red">*</span></label>
-                    <select class="input" name="product_id" required id="kasirRestockSelect" onchange="kasirRestockFill(this)">
-                        <option value="">-- Pilih Produk --</option>
-                        @foreach($allProducts as $p)
-                            <option value="{{ $p->id }}" data-supplier="{{ $p->supplier }}">
-                                {{ $p->store?->name }} · {{ $p->name }} (Stok: {{ $p->stock }})
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="field">
-                    <label>Supplier</label>
-                    <input class="input" id="kasirRestockSupplier" name="supplier" maxlength="120" placeholder="Nama supplier / toko">
-                </div>
-                <div class="field">
-                    <label>Jumlah <span style="color:red">*</span></label>
-                    <input class="input" name="qty" type="number" min="1" required placeholder="Contoh: 12">
-                </div>
-                <div class="field">
-                    <label>Harga per Unit (Rp) <span style="color:red">*</span></label>
-                    <input class="input" name="unit_cost" type="number" min="0" required placeholder="Harga beli per pcs">
-                </div>
-                <div class="field" style="grid-column:1/-1">
-                    <label>Catatan</label>
-                    <textarea class="input" name="notes" rows="2" maxlength="1000" placeholder="Contoh: 1 bal isi 12 pcs..."></textarea>
-                </div>
-            </div>
-            <button class="button" style="margin-top:12px">Simpan Restock</button>
-        </form>
-        <script>
-        function kasirRestockFill(select) {
-            var opt = select.options[select.selectedIndex];
-            var s = document.getElementById('kasirRestockSupplier');
-            if (s) s.value = opt.dataset.supplier || '';
-        }
-        </script>
-    </section>
-
-    <section class="card" style="margin-top:16px">
         <div class="toolbar" style="justify-content:space-between;align-items:center;margin-bottom:12px">
             <h3 style="margin:0">Stok Barang</h3>
             <form method="get" action="{{ route('products.index') }}" class="filter-bar" style="margin-bottom:0;flex-wrap:wrap;gap:6px">
@@ -191,6 +146,7 @@
                         <td>Rp {{ number_format($product->selling_price, 0, ',', '.') }}</td>
                         <td class="product-action-cell">
                             <label class="button secondary mini" for="modal-edit-{{ $product->id }}">Edit</label>
+                            <label class="button secondary mini" for="modal-restock-{{ $product->id }}">Restock</label>
                             <form method="post" action="{{ route('products.destroy', $product) }}" onsubmit="return confirmDelete(this, 'Hapus barang {{ addslashes($product->name) }}?')">
                                 @csrf
                                 @method('DELETE')
@@ -207,6 +163,50 @@
         <x-pager :paginator="$products" />
     </section>
 
+
+{{-- Restock modals --}}
+@foreach($products as $product)
+    <input class="modal-toggle" type="checkbox" id="modal-restock-{{ $product->id }}">
+    <div class="modal">
+        <div class="modal-card" style="max-width:420px">
+            <div class="modal-head">
+                <h3>Restock — {{ $product->name }}</h3>
+                <label class="button secondary mini" for="modal-restock-{{ $product->id }}">Tutup</label>
+            </div>
+            <div class="modal-body">
+                <p class="muted" style="margin:0 0 12px;font-size:13px">
+                    Stok sekarang: <strong style="color:{{ $product->stockColor() }}">{{ $product->stock }}</strong>
+                </p>
+                <form method="post" action="{{ route('owner.restock') }}">
+                    @csrf
+                    <input type="hidden" name="product_id" value="{{ $product->id }}">
+                    <div class="grid-2" style="gap:12px">
+                        <div class="field">
+                            <label>Tambah Qty <span style="color:red">*</span></label>
+                            <input class="input" type="number" name="qty" min="1" required value="1">
+                        </div>
+                        <div class="field">
+                            <label>Harga Modal/pcs (Rp) <span style="color:red">*</span></label>
+                            <input class="input" type="number" name="unit_cost" min="0" required value="{{ $product->cost_price }}">
+                        </div>
+                        <div class="field" style="grid-column:span 2">
+                            <label>Supplier</label>
+                            <input class="input" type="text" name="supplier" value="{{ $product->supplier }}" maxlength="120" placeholder="Nama supplier">
+                        </div>
+                        <div class="field" style="grid-column:span 2">
+                            <label>Catatan</label>
+                            <input class="input" type="text" name="notes" maxlength="1000" placeholder="Opsional">
+                        </div>
+                    </div>
+                    <div style="margin-top:16px;display:flex;gap:8px">
+                        <button class="button" type="submit">Simpan Restock</button>
+                        <label class="button secondary" for="modal-restock-{{ $product->id }}">Batal</label>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+@endforeach
 
 {{-- Edit product modals --}}
 @foreach($products as $product)
