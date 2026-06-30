@@ -70,6 +70,9 @@
                 _posActiveStore = String(storeId);
                 document.querySelectorAll('.pos-store-tab').forEach(function(t){ t.classList.remove('active'); });
                 if (btn) btn.classList.add('active');
+                // Update the hidden store_id so the sale is recorded against the correct store
+                var storeInput = document.getElementById('checkoutStoreId');
+                if (storeInput && storeId !== 'all') storeInput.value = storeId;
                 filterPosProducts();
             }
             function filterPosProducts() {
@@ -101,6 +104,7 @@
 
             <form method="post" action="{{ route('sales.checkout') }}" style="margin-top:16px" data-pos-checkout-form>
                 @csrf
+                <input type="hidden" name="store_id" id="checkoutStoreId" value="{{ auth()->user()->store_id }}">
                 <div class="error" data-pos-alert hidden></div>
                 <div data-items-target></div>
                 <div class="grid-2" style="grid-template-columns:1fr 1fr">

@@ -232,6 +232,7 @@ class AppController extends Controller
     public function checkout(Request $request, PosService $service): RedirectResponse
     {
         $payload = $request->validate([
+            'store_id' => ['required', 'exists:stores,id'],
             'payment_method' => ['required', 'string'],
             'amount_paid' => ['required', 'integer', 'min:0'],
             'discount_type' => ['nullable', 'in:amount,percent'],

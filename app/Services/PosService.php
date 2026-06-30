@@ -27,11 +27,10 @@ class PosService
                 throw new RuntimeException('Pembayaran kurang dari total transaksi.');
             }
 
-            $firstProduct = $totals['products'][0]['product'];
             $sale = Sale::query()->create([
                 'invoice_number' => 'INV-' . now()->format('Ymd') . '-' . Str::upper(Str::random(5)),
                 'user_id' => $cashier->id,
-                'store_id' => $firstProduct->store_id,
+                'store_id' => (int) $data['store_id'],
                 'discount_approval_id' => $discount?->id,
                 'subtotal' => $totals['subtotal'],
                 'discount_amount' => $discountAmount,
