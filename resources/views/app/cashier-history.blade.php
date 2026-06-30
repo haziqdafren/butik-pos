@@ -23,7 +23,11 @@
                     <tr>
                         <td>{{ $sale->invoice_number }}</td>
                         <td>{{ $sale->created_at->format('d/m/Y H:i') }}</td>
-                        <td style="font-size:12px;color:var(--muted)">{{ $sale->store?->name ?? '-' }}</td>
+                        <td style="font-size:12px;color:var(--muted)">{{ $sale->store?->name ?? '-' }}
+                            @if($sale->stockSourceStore)
+                                <br><small style="color:#92400e;font-size:10px">stok: {{ $sale->stockSourceStore->name }}</small>
+                            @endif
+                        </td>
                         <td>{{ $sale->items->sum('qty') }}</td>
                         <td>Rp {{ number_format($sale->discount_amount, 0, ',', '.') }}</td>
                         <td class="money">Rp {{ number_format($sale->total, 0, ',', '.') }}</td>
@@ -76,6 +80,11 @@
                             @if($voidRecord)
                                 Alasan: <strong>{{ $voidRecord->reason }}</strong>
                             @endif
+                        </div>
+                    @endif
+                    @if($sale->stockSourceStore)
+                        <div class="notice" style="background:#fef3c7;color:#92400e;border-color:#fbbf24;margin-bottom:8px">
+                            Stok diambil dari: <strong>{{ $sale->stockSourceStore->name }}</strong>
                         </div>
                     @endif
                     <div class="detail-grid">

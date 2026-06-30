@@ -22,7 +22,11 @@
                 @forelse($sales as $sale)
                     <tr>
                         <td>{{ $sale->invoice_number }}</td>
-                        <td class="col-hide-mobile" style="font-size:12px;color:var(--muted)">{{ $sale->store?->name ?? '-' }}</td>
+                        <td class="col-hide-mobile" style="font-size:12px;color:var(--muted)">{{ $sale->store?->name ?? '-' }}
+                            @if($sale->stockSourceStore)
+                                <br><small style="color:#92400e;font-size:10px">stok: {{ $sale->stockSourceStore->name }}</small>
+                            @endif
+                        </td>
                         <td class="col-hide-mobile">{{ $sale->cashier?->name ?? '-' }}</td>
                         <td class="col-hide-mobile">{{ $sale->created_at->format('d/m/Y H:i') }}</td>
                         <td class="col-hide-mobile">{{ $sale->items->sum('qty') }}</td>
@@ -73,6 +77,11 @@
                             @if($voidRecord)
                                 Alasan: <strong>{{ $voidRecord->reason }}</strong>
                             @endif
+                        </div>
+                    @endif
+                    @if($sale->stockSourceStore)
+                        <div class="notice" style="background:#fef3c7;color:#92400e;border-color:#fbbf24;margin-bottom:8px">
+                            Stok diambil dari: <strong>{{ $sale->stockSourceStore->name }}</strong>
                         </div>
                     @endif
                     <div class="detail-grid">

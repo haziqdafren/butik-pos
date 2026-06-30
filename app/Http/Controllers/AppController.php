@@ -90,7 +90,7 @@ class AppController extends Controller
         $dateTo   = request('date_to');
 
         $sales = Sale::query()
-            ->with('items', 'cashier', 'store:id,name', 'discount', 'corrections.requester')
+            ->with('items', 'cashier', 'store:id,name', 'stockSourceStore:id,name', 'discount', 'corrections.requester')
             ->when($search, function ($q, $search) {
                 $q->where(function ($q) use ($search) {
                     $q->where('invoice_number', 'like', "%{$search}%")
@@ -130,7 +130,7 @@ class AppController extends Controller
         $dateTo   = request('date_to');
 
         $sales = Sale::query()
-            ->with('items', 'discount', 'corrections.requester', 'cashier:id,name', 'store:id,name')
+            ->with('items', 'discount', 'corrections.requester', 'cashier:id,name', 'store:id,name', 'stockSourceStore:id,name')
             ->when($search, fn($q, $search) => $q->where('invoice_number', 'like', "%{$search}%"))
             ->when($dateFrom, fn($q, $d) => $q->whereDate('created_at', '>=', $d))
             ->when($dateTo,   fn($q, $d) => $q->whereDate('created_at', '<=', $d))
@@ -233,6 +233,7 @@ class AppController extends Controller
     {
         $payload = $request->validate([
             'store_id' => ['required', 'exists:stores,id'],
+            'stock_source' => ['nullable', 'exists:stores,id'],
             'payment_method' => ['required', 'string'],
             'amount_paid' => ['required', 'integer', 'min:0'],
             'discount_type' => ['nullable', 'in:amount,percent'],
@@ -247,6 +248,10 @@ class AppController extends Controller
             $sale = $service->checkout(auth()->user(), $payload);
         } catch (\RuntimeException $exception) {
             return back()->withInput()->withErrors(['checkout' => $exception->getMessage()]);
+        }
+
+        if (!empty($payload['stock_source'])) {
+            $sale->update(['stock_source_store_id' => $payload['stock_source']]);
         }
 
         return redirect()

@@ -12,6 +12,7 @@ class Sale extends Model
         'invoice_number',
         'user_id',
         'store_id',
+        'stock_source_store_id',
         'discount_approval_id',
         'subtotal',
         'discount_amount',
@@ -60,5 +61,10 @@ class Sale extends Model
     public function corrections(): HasMany
     {
         return $this->hasMany(SaleCorrection::class);
+    }
+
+    public function stockSourceStore(): BelongsTo
+    {
+        return $this->belongsTo(Store::class, 'stock_source_store_id');
     }
 }

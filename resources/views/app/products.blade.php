@@ -25,8 +25,7 @@
                 </div>
             @endif
             <p class="muted" style="margin:0 0 12px;font-size:13px">
-                Harga jual dihitung otomatis: <strong>(Modal + Ongkir) × 1,5</strong>, dibulatkan ke Rp 5.000 terdekat.
-                Ongkir diisi otomatis dari kategori (Jeans: Rp 20.000 · Lainnya: Rp 15.000) — bisa diubah manual.
+                Harga jual dihitung otomatis: <strong>Modal × 1,5</strong>, dibulatkan ke Rp 5.000 terdekat.
             </p>
             <div class="bulk-table-wrap">
                 <table class="bulk-table">
@@ -39,7 +38,6 @@
                             <th>Ukuran</th>
                             <th>Supplier</th>
                             <th>Modal (Rp) *</th>
-                            <th>Ongkir/pcs</th>
                             <th>Harga Jual (otomatis)</th>
                             <th>Stok *</th>
                             <th></th>
@@ -82,16 +80,13 @@
                                 <small class="muted" data-rp-preview hidden></small>
                             </td>
                             <td>
-                                <input class="input" type="number" min="0" placeholder="0" data-bulk-shipping data-rupiah style="width:96px">
-                                <small class="muted" data-rp-preview style="font-size:10px;display:block;margin-top:2px"></small>
-                            </td>
-                            <td>
                                 <input class="input" type="number" name="rows[0][selling_price]" min="0" required placeholder="–" data-bulk-selling
                                     style="font-weight:700;color:var(--ink)" title="Harga jual otomatis — bisa diubah manual">
                                 <small data-bulk-price-preview class="muted" style="font-size:10px;line-height:1.5;display:block;margin-top:3px"></small>
                             </td>
                             <td><input class="input" type="number" name="rows[0][stock]" min="0" required value="1" style="width:64px"></td>
-                            <td>
+                            <td style="white-space:nowrap">
+                                <button type="button" class="button secondary mini" onclick="copyProductRow(this)" title="Salin baris">⧉</button>
                                 <button type="button" class="button danger mini" onclick="removeProductRow(this)" title="Hapus baris">×</button>
                             </td>
                         </tr>
@@ -191,11 +186,6 @@
                                 oninput="restockCalc(this.closest('form'))">
                         </div>
                         <div class="field">
-                            <label>Ongkir/pcs (Rp)</label>
-                            <input class="input" type="number" min="0" value="{{ $product->category === 'jeans' ? 20000 : 15000 }}" placeholder="0"
-                                data-restock-shipping oninput="restockCalc(this.closest('form'))">
-                        </div>
-                        <div class="field">
                             <label>Harga Jual (Rp) <span style="color:red">*</span></label>
                             <input class="input" type="number" name="selling_price" min="0" required value="{{ $product->selling_price }}"
                                 data-restock-selling style="font-weight:700">
@@ -223,17 +213,12 @@
 <script>
 function restockCalc(form) {
     var cost = parseFloat(form.querySelector('[name=unit_cost]').value) || 0;
-    var shipping = parseFloat(form.querySelector('[data-restock-shipping]').value) || 0;
-    var raw = (cost + shipping) * 1.5;
+    var raw = cost * 1.5;
     var rounded = Math.ceil(raw / 5000) * 5000;
     var sellingInput = form.querySelector('[data-restock-selling]');
     var preview = form.querySelector('[data-restock-preview]');
-    sellingInput.value = rounded;
-    if (rounded > 0) {
-        preview.textContent = '(Modal+Ongkir)×1.5 = Rp ' + rounded.toLocaleString('id-ID') + ' — bisa diubah manual';
-    } else {
-        preview.textContent = '';
-    }
+    sellingInput.value = rounded > 0 ? rounded : '';
+    preview.textContent = rounded > 0 ? 'Modal ×1,5 = Rp ' + rounded.toLocaleString('id-ID') + ' — bisa diubah manual' : '';
 }
 </script>
 

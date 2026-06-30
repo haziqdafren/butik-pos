@@ -105,6 +105,16 @@
             <form method="post" action="{{ route('sales.checkout') }}" style="margin-top:16px" data-pos-checkout-form>
                 @csrf
                 <input type="hidden" name="store_id" id="checkoutStoreId" value="{{ auth()->user()->store_id }}">
+                <div class="field" style="margin-bottom:12px">
+                    <label>Sumber Stok</label>
+                    <select class="input" name="stock_source">
+                        <option value="">Toko Sendiri</option>
+                        @foreach($stores as $store)
+                            <option value="{{ $store->id }}">Ambil dari {{ $store->name }}</option>
+                        @endforeach
+                    </select>
+                    <small class="muted" style="font-size:12px">Isi jika barang diambil dari toko lain.</small>
+                </div>
                 <div class="error" data-pos-alert hidden></div>
                 <div data-items-target></div>
                 <div class="grid-2" style="grid-template-columns:1fr 1fr">

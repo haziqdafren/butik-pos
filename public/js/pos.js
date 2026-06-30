@@ -243,7 +243,7 @@ function initMoneyInputs(root) {
         attachRupiahMask(el);
     });
 
-    root.querySelectorAll('[data-bulk-cost], [data-bulk-shipping]').forEach(function(el) {
+    root.querySelectorAll('[data-bulk-cost]').forEach(function(el) {
         attachRupiahMask(el);
     });
 
@@ -281,7 +281,7 @@ function reinitDiscountMask() {
 
 document.addEventListener("input", function(event) {
     var t = event.target;
-    if (t.matches("[data-discount-value], [data-rupiah], [data-bulk-cost], [data-bulk-shipping]") ||
+    if (t.matches("[data-discount-value], [data-rupiah], [data-bulk-cost]") ||
         t.matches("[name='discount_reason']")) {
         if (t.matches("[name='discount_reason']")) window.POS.clearAlert();
         window.POS.refreshSummary();
@@ -407,4 +407,46 @@ function removeProductRow(btn) {
             });
         });
     }
+}
+
+function copyProductRow(btn) {
+    var tbody = document.getElementById('bulk-tbody');
+    var sourceRow = btn.closest('tr');
+    var newRow = sourceRow.cloneNode(true);
+
+    // Remove money-mask hidden inputs injected by attachRupiahMask
+    newRow.querySelectorAll('input[type="hidden"][data-mask-for]').forEach(function(h) {
+        h.remove();
+    });
+
+    // Reset masking flags on cloned inputs so initMoneyInputs re-attaches cleanly
+    newRow.querySelectorAll('input[data-mask-attached]').forEach(function(i) {
+        var origName = i.dataset.maskedName || '';
+        if (origName) i.name = origName;
+        delete i.dataset.maskAttached;
+        delete i.dataset.maskedName;
+        i.type = 'number';
+        // Keep the value so it copies the source row's cost
+    });
+
+    // Re-index all name attributes
+    var idx = tbody.querySelectorAll('tr').length;
+    newRow.querySelectorAll('[name]').forEach(function(el) {
+        el.name = el.name.replace(/rows\[\d+\]/, 'rows[' + idx + ']');
+    });
+
+    // Sync size hidden input to match current select value
+    var sizeSelect = newRow.querySelector('[data-size-select]');
+    var sizeHidden = newRow.querySelector('input[type="hidden"][name$="[size]"]');
+    if (sizeSelect && sizeHidden) sizeHidden.value = sizeSelect.value;
+
+    // Clear selling price preview text
+    var preview = newRow.querySelector('[data-bulk-price-preview]');
+    if (preview) preview.textContent = '';
+
+    tbody.appendChild(newRow);
+
+    // Re-attach money masking and auto-pricing for the new row
+    initMoneyInputs(newRow);
+    if (window.initBulkRow) initBulkRow(newRow);
 }
