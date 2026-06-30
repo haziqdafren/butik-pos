@@ -62,15 +62,15 @@
         .btn-print { background: #b2472f; color: white; }
         .btn-close { background: #67727f; color: white; }
 
-        /* ── Print: 58mm thermal roll (Blueprint Lite 58D) ── */
+        /* ── Print: ISO A7 (74mm × 105mm) ── */
         @page {
-            size: 58mm auto;
-            margin: 0;
+            size: 74mm 105mm;
+            margin: 3mm;
         }
 
         @media print {
             html, body {
-                width: 58mm;
+                width: 74mm;
                 margin: 0;
                 padding: 0;
                 font-family: Arial, Helvetica, sans-serif;
@@ -78,18 +78,25 @@
             }
 
             .receipt {
-                width: 58mm;
-                padding: 2mm;
+                width: 100%;
+                padding: 0;
                 box-sizing: border-box;
                 font-family: Arial, Helvetica, sans-serif;
-                font-size: 13px;
+                font-size: 10px;
+                line-height: 1.3;
                 font-weight: bold;
                 border: none;
                 box-shadow: none;
             }
 
             .receipt * { font-weight: bold !important; font-size: inherit; }
-            .total-row { font-size: 15px !important; }
+
+            .divider       { margin: 2px 0; }
+            .divider-solid { margin: 2px 0; }
+            .row           { margin: 1px 0; }
+            .items-table td { padding: 1px 0; }
+            .total-row     { font-size: 12px !important; margin: 2px 0; }
+            .footer-msg    { margin-top: 4px; }
 
             .no-print { display: none; }
         }
