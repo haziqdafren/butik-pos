@@ -109,21 +109,62 @@
                     <label class="button secondary mini" for="modal-pwd-{{ $user->id }}">Tutup</label>
                 </div>
                 <div class="modal-body">
-                    <form method="post" action="{{ route('owner.users.password', $user) }}">
+                    <form method="post" action="{{ route('owner.users.password', $user) }}" onsubmit="return checkPwdMatch(this)">
                         @csrf
                         <div class="field">
                             <label>Password Baru <span style="color:red">*</span></label>
-                            <input class="input" type="password" name="password" required minlength="8" placeholder="Min. 8 karakter">
+                            <input class="input" type="password" name="password" required minlength="8" placeholder="Min. 8 karakter"
+                                oninput="pwdLiveCheck(this.closest('form'))">
                         </div>
                         <div class="field">
                             <label>Konfirmasi Password <span style="color:red">*</span></label>
-                            <input class="input" type="password" name="password_confirmation" required minlength="8" placeholder="Ulangi password baru">
+                            <input class="input" type="password" name="password_confirmation" required minlength="8" placeholder="Ulangi password baru"
+                                oninput="pwdLiveCheck(this.closest('form'))">
+                            <small data-pwd-msg style="font-size:12px;margin-top:4px;display:block"></small>
                         </div>
-                        <button class="button" style="width:100%;margin-top:8px">Simpan Password</button>
+                        <button class="button" style="width:100%;margin-top:8px" data-pwd-submit disabled>Simpan Password</button>
                     </form>
                 </div>
             </div>
         </div>
     @endforeach
+
+<script>
+function pwdLiveCheck(form) {
+    var pwd  = form.querySelector('[name=password]').value;
+    var conf = form.querySelector('[name=password_confirmation]').value;
+    var msg  = form.querySelector('[data-pwd-msg]');
+    var btn  = form.querySelector('[data-pwd-submit]');
+
+    if (conf.length === 0) {
+        msg.textContent = '';
+        btn.disabled = true;
+        return;
+    }
+    if (pwd === conf && pwd.length >= 8) {
+        msg.textContent = '✓ Password cocok';
+        msg.style.color = '#065f46';
+        btn.disabled = false;
+    } else if (pwd !== conf) {
+        msg.textContent = '✗ Password tidak cocok';
+        msg.style.color = '#b91c1c';
+        btn.disabled = true;
+    } else {
+        msg.textContent = 'Minimal 8 karakter';
+        msg.style.color = '#92400e';
+        btn.disabled = true;
+    }
+}
+
+function checkPwdMatch(form) {
+    var pwd  = form.querySelector('[name=password]').value;
+    var conf = form.querySelector('[name=password_confirmation]').value;
+    if (pwd !== conf) {
+        alert('Password tidak cocok. Silakan periksa kembali.');
+        return false;
+    }
+    return true;
+}
+</script>
 
 </x-layouts.app>
