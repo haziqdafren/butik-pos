@@ -169,10 +169,11 @@ class AppController extends Controller
             ->withQueryString();
 
         return view('app.products', [
-            'products'   => $products,
-            'stores'     => Store::query()->orderBy('name')->get(),
-            'categories' => $this->categories(),
-            'search'     => $search,
+            'products'      => $products,
+            'allProducts'   => Product::query()->with('store:id,name')->orderBy('name')->get(['id', 'name', 'stock', 'store_id', 'supplier']),
+            'stores'        => Store::query()->orderBy('name')->get(),
+            'categories'    => $this->categories(),
+            'search'        => $search,
         ]);
     }
 
@@ -280,7 +281,6 @@ class AppController extends Controller
 
     public function ownerRestock(Request $request): RedirectResponse
     {
-        abort_unless(auth()->user()->isOwner(), 403);
 
         $data = $request->validate([
             'product_id' => ['required', 'exists:products,id'],

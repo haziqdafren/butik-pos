@@ -106,6 +106,51 @@
     </section>
 
     <section class="card" style="margin-top:16px">
+        <h3 style="margin:0 0 12px">Restock Barang</h3>
+        <p class="muted" style="margin-bottom:12px;font-size:13px">Pilih produk yang ingin ditambah stoknya. Stok otomatis bertambah dan harga modal diperbarui.</p>
+        <form method="post" action="{{ route('owner.restock') }}">
+            @csrf
+            <div class="grid-2" style="gap:12px">
+                <div class="field">
+                    <label>Produk <span style="color:red">*</span></label>
+                    <select class="input" name="product_id" required id="kasirRestockSelect" onchange="kasirRestockFill(this)">
+                        <option value="">-- Pilih Produk --</option>
+                        @foreach($allProducts as $p)
+                            <option value="{{ $p->id }}" data-supplier="{{ $p->supplier }}">
+                                {{ $p->store?->name }} · {{ $p->name }} (Stok: {{ $p->stock }})
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Supplier</label>
+                    <input class="input" id="kasirRestockSupplier" name="supplier" maxlength="120" placeholder="Nama supplier / toko">
+                </div>
+                <div class="field">
+                    <label>Jumlah <span style="color:red">*</span></label>
+                    <input class="input" name="qty" type="number" min="1" required placeholder="Contoh: 12">
+                </div>
+                <div class="field">
+                    <label>Harga per Unit (Rp) <span style="color:red">*</span></label>
+                    <input class="input" name="unit_cost" type="number" min="0" required placeholder="Harga beli per pcs">
+                </div>
+                <div class="field" style="grid-column:1/-1">
+                    <label>Catatan</label>
+                    <textarea class="input" name="notes" rows="2" maxlength="1000" placeholder="Contoh: 1 bal isi 12 pcs..."></textarea>
+                </div>
+            </div>
+            <button class="button" style="margin-top:12px">Simpan Restock</button>
+        </form>
+        <script>
+        function kasirRestockFill(select) {
+            var opt = select.options[select.selectedIndex];
+            var s = document.getElementById('kasirRestockSupplier');
+            if (s) s.value = opt.dataset.supplier || '';
+        }
+        </script>
+    </section>
+
+    <section class="card" style="margin-top:16px">
         <div class="toolbar" style="justify-content:space-between;align-items:center;margin-bottom:12px">
             <h3 style="margin:0">Stok Barang</h3>
             <form method="get" action="{{ route('products.index') }}" class="filter-bar" style="margin-bottom:0;flex-wrap:wrap;gap:6px">
