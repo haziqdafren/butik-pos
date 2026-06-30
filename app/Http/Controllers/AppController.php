@@ -402,7 +402,6 @@ class AppController extends Controller
 
     public function updateProduct(Request $request, Product $product): RedirectResponse
     {
-        abort_unless(auth()->user()->isOwner(), 403);
 
         $data = $request->validate([
             'name'          => ['required', 'string', 'max:120'],
@@ -423,7 +422,6 @@ class AppController extends Controller
 
     public function destroyProduct(Product $product): RedirectResponse
     {
-        abort_unless(auth()->user()->isOwner(), 403);
 
         try {
             $product->delete();
