@@ -130,7 +130,7 @@
         </div>
         <div class="table-wrap">
             <table>
-                <thead><tr><th class="col-hide-mobile">SKU</th><th>Nama</th><th>Toko</th><th>Kategori</th><th class="col-hide-mobile">Warna</th><th class="col-hide-mobile">Ukuran</th><th>Stok</th><th class="col-hide-mobile">Modal</th><th>Jual</th><th></th></tr></thead>
+                <thead><tr><th class="col-hide-mobile">SKU</th><th>Nama</th><th>Toko</th><th>Kategori</th><th class="col-hide-mobile">Supplier</th><th class="col-hide-mobile">Warna</th><th class="col-hide-mobile">Ukuran</th><th>Stok</th><th class="col-hide-mobile">Modal</th><th>Jual</th><th></th></tr></thead>
                 <tbody>
                 @forelse($products as $product)
                     <tr>
@@ -138,6 +138,7 @@
                         <td>{{ $product->name }}</td>
                         <td style="font-size:12px;color:var(--muted)">{{ $product->store?->name }}</td>
                         <td>{{ $product->category }}</td>
+                        <td class="col-hide-mobile" style="font-size:12px;color:var(--muted)">{{ $product->supplier ?: '-' }}</td>
                         <td class="col-hide-mobile">{{ $product->color }}</td>
                         <td class="col-hide-mobile">{{ $product->size }}</td>
                         <td><strong style="color:{{ $product->stockColor() }};font-size:15px">{{ $product->stock }}</strong></td>

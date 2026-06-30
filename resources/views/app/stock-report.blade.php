@@ -25,13 +25,11 @@
                         <th class="col-hide-mobile">SKU</th>
                         <th>Barang</th>
                         <th class="col-hide-mobile">Kategori</th>
-                        <th class="col-hide-mobile">Warna</th>
-                        <th class="col-hide-mobile">Ukuran</th>
                         <th class="col-hide-mobile">Toko</th>
+                        <th class="col-hide-mobile">Supplier</th>
                         <th class="col-hide-mobile">Modal</th>
                         <th class="col-hide-mobile">Jual</th>
                         <th>Stok</th>
-                        <th>Status</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -40,16 +38,14 @@
                         <td class="col-hide-mobile" style="font-size:11px;color:var(--muted)">{{ $product->sku }}</td>
                         <td><strong>{{ $product->name }}</strong></td>
                         <td class="col-hide-mobile">{{ $product->category }}</td>
-                        <td class="col-hide-mobile">{{ $product->color ?: '-' }}</td>
-                        <td class="col-hide-mobile">{{ $product->size ?: '-' }}</td>
-                        <td class="col-hide-mobile">{{ $product->store->name }}</td>
+                        <td class="col-hide-mobile" style="font-size:12px;color:var(--muted)">{{ $product->store?->name ?? '-' }}</td>
+                        <td class="col-hide-mobile" style="font-size:12px;color:var(--muted)">{{ $product->supplier ?: '-' }}</td>
                         <td class="col-hide-mobile">Rp {{ number_format($product->cost_price, 0, ',', '.') }}</td>
                         <td class="col-hide-mobile">Rp {{ number_format($product->selling_price, 0, ',', '.') }}</td>
-                        <td><strong>{{ $product->stock }}</strong></td>
                         <td><strong style="color:{{ $product->stockColor() }};font-size:15px">{{ $product->stock }}</strong></td>
                     </tr>
                 @empty
-                    <tr><td colspan="10" class="muted">Tidak ada produk ditemukan.</td></tr>
+                    <tr><td colspan="8" class="muted">Tidak ada produk ditemukan.</td></tr>
                 @endforelse
                 </tbody>
             </table>
