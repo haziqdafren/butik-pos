@@ -220,6 +220,28 @@ function restockCalc(form) {
     sellingInput.value = rounded > 0 ? rounded : '';
     preview.textContent = rounded > 0 ? 'Modal ×1,5 = Rp ' + rounded.toLocaleString('id-ID') + ' — bisa diubah manual' : '';
 }
+
+function copyProductRow(btn) {
+    var tbody = document.getElementById('bulk-tbody');
+    if (!tbody) return;
+    var sourceRow = btn.closest('tr');
+    if (!sourceRow) return;
+
+    var newRow = sourceRow.cloneNode(true);
+    var newIdx = tbody.querySelectorAll('tr').length;
+
+    // Re-index name attributes so fields don't clash with source row
+    newRow.querySelectorAll('[name]').forEach(function(el) {
+        el.name = el.name.replace(/rows\[\d+\]/, 'rows[' + newIdx + ']');
+    });
+
+    // Re-index data-mask-for on hidden money inputs
+    newRow.querySelectorAll('[data-mask-for]').forEach(function(el) {
+        el.dataset.maskFor = el.dataset.maskFor.replace(/rows\[\d+\]/, 'rows[' + newIdx + ']');
+    });
+
+    tbody.appendChild(newRow);
+}
 </script>
 
 {{-- Edit product modals --}}
