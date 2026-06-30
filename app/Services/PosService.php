@@ -130,10 +130,6 @@ class PosService
     {
         $reason = trim($reason);
 
-        if ($cashier->id !== $sale->user_id) {
-            throw new RuntimeException('Hanya kasir yang membuat transaksi ini yang dapat membatalkannya.');
-        }
-
         if ($sale->status !== 'completed') {
             throw new RuntimeException('Transaksi ini sudah dibatalkan.');
         }

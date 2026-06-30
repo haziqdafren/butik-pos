@@ -256,11 +256,6 @@ class AppController extends Controller
 
     public function selfVoid(Request $request, Sale $sale, PosService $service): RedirectResponse
     {
-        abort_unless(
-            auth()->user()->isOwner() || $sale->user_id === auth()->id() || $sale->store_id === auth()->user()->store_id,
-            403
-        );
-
         $payload = $request->validate([
             'reason' => ['required', 'string', 'min:8', 'max:500'],
         ]);
@@ -396,11 +391,6 @@ class AppController extends Controller
 
     public function receipt(Request $request, Sale $sale, SettingsService $settings): View
     {
-        abort_unless(
-            auth()->user()->isOwner() || $sale->user_id === auth()->id() || $sale->store_id === auth()->user()->store_id,
-            403
-        );
-
         $sale->load('items.product', 'cashier', 'store');
 
         return view('app.receipt', [
