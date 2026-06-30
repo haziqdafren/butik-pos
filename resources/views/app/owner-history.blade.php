@@ -16,12 +16,13 @@
         <div class="table-wrap">
             <table>
                 <thead>
-                <tr><th>Invoice</th><th class="col-hide-mobile">Kasir</th><th class="col-hide-mobile">Waktu</th><th class="col-hide-mobile">Item</th><th class="col-hide-mobile">Diskon</th><th>Total</th><th>Status</th><th>Aksi</th></tr>
+                <tr><th>Invoice</th><th class="col-hide-mobile">Toko</th><th class="col-hide-mobile">Kasir</th><th class="col-hide-mobile">Waktu</th><th class="col-hide-mobile">Item</th><th class="col-hide-mobile">Diskon</th><th>Total</th><th>Status</th><th>Aksi</th></tr>
                 </thead>
                 <tbody>
                 @forelse($sales as $sale)
                     <tr>
                         <td>{{ $sale->invoice_number }}</td>
+                        <td class="col-hide-mobile" style="font-size:12px;color:var(--muted)">{{ $sale->store?->name ?? '-' }}</td>
                         <td class="col-hide-mobile">{{ $sale->cashier?->name ?? '-' }}</td>
                         <td class="col-hide-mobile">{{ $sale->created_at->format('d/m/Y H:i') }}</td>
                         <td class="col-hide-mobile">{{ $sale->items->sum('qty') }}</td>

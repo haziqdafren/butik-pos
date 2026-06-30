@@ -74,12 +74,13 @@
             <h3>Transaksi Terbaru</h3>
             <div class="table-wrap">
                 <table>
-                    <thead><tr><th>Invoice</th><th>Kasir</th><th>Total</th><th>Status</th></tr></thead>
+                    <thead><tr><th>Invoice</th><th>Toko</th><th>Kasir</th><th>Total</th><th>Status</th></tr></thead>
                     <tbody>
                     @forelse($recentSales as $sale)
                         <tr>
                             <td><span class="invoice-cell">{{ $sale->invoice_number }}</span></td>
-                            <td>{{ $sale->cashier->name }}</td>
+                            <td style="font-size:12px;color:var(--muted)">{{ $sale->store?->name ?? '-' }}</td>
+                            <td>{{ $sale->cashier?->name ?? '-' }}</td>
                             <td class="money">Rp {{ number_format($sale->total, 0, ',', '.') }}</td>
                             <td>
                                 @if($sale->status === 'voided')
@@ -128,16 +129,21 @@
             <div class="grid-2" style="gap:12px">
                 <div class="field">
                     <label>Produk <span style="color:red">*</span></label>
-                    <select class="input" name="product_id" required>
+                    <select class="input" name="product_id" id="restockProductSelect" required onchange="restockAutoFill(this)">
                         <option value="">-- Pilih Produk --</option>
                         @foreach($products as $product)
-                            <option value="{{ $product->id }}">{{ $product->store->name }} · {{ $product->name }} (Stok: {{ $product->stock }})</option>
+                            <option value="{{ $product->id }}"
+                                data-supplier="{{ $product->supplier }}"
+                                data-category="{{ $product->category }}">
+                                {{ $product->store->name }} · {{ $product->name }} (Stok: {{ $product->stock }})
+                            </option>
                         @endforeach
                     </select>
                 </div>
                 <div class="field">
                     <label>Supplier</label>
-                    <input class="input" name="supplier" maxlength="120" placeholder="Nama supplier / toko">
+                    <input class="input" id="restockSupplierInput" name="supplier" maxlength="120" placeholder="Nama supplier / toko">
+                    <small id="restockSupplierHint" class="muted" style="display:none;margin-top:4px"></small>
                 </div>
                 <div class="field">
                     <label>Ongkos Kirim/pcs</label>
@@ -219,6 +225,22 @@
     </div>
 <script>
 window.PRODUCT_CATEGORIES = @json($products->pluck('category', 'id'));
+function restockAutoFill(select) {
+    var opt = select.options[select.selectedIndex];
+    var supplier = opt.dataset.supplier || '';
+    var supplierInput = document.getElementById('restockSupplierInput');
+    var hint = document.getElementById('restockSupplierHint');
+    if (supplierInput) supplierInput.value = supplier;
+    if (hint) {
+        if (supplier) {
+            hint.textContent = 'Supplier terakhir: ' + supplier;
+            hint.style.display = 'block';
+        } else {
+            hint.textContent = '';
+            hint.style.display = 'none';
+        }
+    }
+}
 function setPurchaseMode(mode) {
     var isNew = mode === 'new';
     document.getElementById('formRestock').hidden = isNew;

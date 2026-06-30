@@ -60,7 +60,7 @@ class AppController extends Controller
         ];
 
         $recentSales = Sale::query()
-            ->with('cashier:id,name')
+            ->with('cashier:id,name', 'store:id,name')
             ->latest()
             ->limit(10)
             ->get(['id', 'invoice_number', 'user_id', 'total', 'status', 'created_at']);
@@ -90,7 +90,7 @@ class AppController extends Controller
         $dateTo   = request('date_to');
 
         $sales = Sale::query()
-            ->with('items', 'cashier', 'discount', 'corrections.requester')
+            ->with('items', 'cashier', 'store:id,name', 'discount', 'corrections.requester')
             ->when($search, function ($q, $search) {
                 $q->where(function ($q) use ($search) {
                     $q->where('invoice_number', 'like', "%{$search}%")
