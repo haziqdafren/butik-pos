@@ -125,8 +125,8 @@
             </div>
         </div>
     </div>
-<script src="{{ asset('js/pos.js') }}?v=20260630b"></script>
-<script src="{{ asset('js/pricing.js') }}?v=20260630b"></script>
+<script src="{{ asset('js/pos.js') }}?v={{ filemtime(public_path('js/pos.js')) }}"></script>
+<script src="{{ asset('js/pricing.js') }}?v={{ filemtime(public_path('js/pricing.js')) }}"></script>
 <script>
 // ── Sidebar drawer ──────────────────────────────────────────
 function toggleSidebar() {
