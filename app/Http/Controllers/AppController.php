@@ -165,7 +165,7 @@ class AppController extends Controller
             ->when($storeFilter, fn($q, $v) => $q->where('store_id', $v))
             ->when($categoryFilter, fn($q, $v) => $q->where('category', $v))
             ->latest()
-            ->paginate(25)
+            ->paginate(10)
             ->withQueryString();
 
         return view('app.products', [
