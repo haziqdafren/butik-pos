@@ -10,6 +10,7 @@
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 <div class="app-shell">
     <aside class="sidebar" id="appSidebar">
+        <button class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" title="Collapse sidebar">◀</button>
         <div class="brand">Butik POS</div>
         <div class="brand-sub">Retail management</div>
         <div class="role-card">
@@ -21,51 +22,51 @@
         @if(auth()->user()->isOwner())
             {{-- OWNER SIDEBAR --}}
             <div class="nav-section">Kasir</div>
-            <a class="nav-link {{ request()->routeIs('cashier.pos') ? 'active' : '' }}" href="{{ route('cashier.pos') }}" onclick="closeSidebar()">
-                <span class="nav-icon">🛒</span> Transaksi Kasir
+            <a class="nav-link {{ request()->routeIs('cashier.pos') ? 'active' : '' }}" href="{{ route('cashier.pos') }}" onclick="closeSidebar()" title="Transaksi Kasir">
+                <span class="nav-icon">🛒</span><span class="nav-text"> Transaksi Kasir</span>
             </a>
-            <a class="nav-link {{ request()->routeIs('products.index') ? 'active' : '' }}" href="{{ route('products.index') }}" onclick="closeSidebar()">
-                <span class="nav-icon">📦</span> Input Barang
+            <a class="nav-link {{ request()->routeIs('products.index') ? 'active' : '' }}" href="{{ route('products.index') }}" onclick="closeSidebar()" title="Input Barang">
+                <span class="nav-icon">📦</span><span class="nav-text"> Input Barang</span>
             </a>
 
             <div class="nav-section">Owner</div>
-            <a class="nav-link {{ request()->routeIs('owner.dashboard') ? 'active' : '' }}" href="{{ route('owner.dashboard') }}" onclick="closeSidebar()">
-                <span class="nav-icon">📊</span> Dashboard
+            <a class="nav-link {{ request()->routeIs('owner.dashboard') ? 'active' : '' }}" href="{{ route('owner.dashboard') }}" onclick="closeSidebar()" title="Dashboard">
+                <span class="nav-icon">📊</span><span class="nav-text"> Dashboard</span>
             </a>
-            <a class="nav-link {{ request()->routeIs('owner.history') ? 'active' : '' }}" href="{{ route('owner.history') }}" onclick="closeSidebar()">
-                <span class="nav-icon">🧾</span> Riwayat Transaksi
+            <a class="nav-link {{ request()->routeIs('owner.history') ? 'active' : '' }}" href="{{ route('owner.history') }}" onclick="closeSidebar()" title="Riwayat Transaksi">
+                <span class="nav-icon">🧾</span><span class="nav-text"> Riwayat Transaksi</span>
             </a>
-            <a class="nav-link {{ request()->routeIs('owner.reports') ? 'active' : '' }}" href="{{ route('owner.reports') }}" onclick="closeSidebar()">
-                <span class="nav-icon">💰</span> Laporan Pendapatan
+            <a class="nav-link {{ request()->routeIs('owner.reports') ? 'active' : '' }}" href="{{ route('owner.reports') }}" onclick="closeSidebar()" title="Laporan Pendapatan">
+                <span class="nav-icon">💰</span><span class="nav-text"> Laporan Pendapatan</span>
             </a>
-            <a class="nav-link {{ request()->routeIs('owner.stock-report') ? 'active' : '' }}" href="{{ route('owner.stock-report') }}" onclick="closeSidebar()">
-                <span class="nav-icon">📋</span> Laporan Stok
+            <a class="nav-link {{ request()->routeIs('owner.stock-report') ? 'active' : '' }}" href="{{ route('owner.stock-report') }}" onclick="closeSidebar()" title="Laporan Stok">
+                <span class="nav-icon">📋</span><span class="nav-text"> Laporan Stok</span>
             </a>
 
             <div class="nav-section">Manajemen</div>
-            <a class="nav-link {{ request()->routeIs('owner.users') ? 'active' : '' }}" href="{{ route('owner.users') }}" onclick="closeSidebar()">
-                <span class="nav-icon">👤</span> Kelola Pengguna
+            <a class="nav-link {{ request()->routeIs('owner.users') ? 'active' : '' }}" href="{{ route('owner.users') }}" onclick="closeSidebar()" title="Kelola Pengguna">
+                <span class="nav-icon">👤</span><span class="nav-text"> Kelola Pengguna</span>
             </a>
-            <a class="nav-link {{ request()->routeIs('owner.settings') ? 'active' : '' }}" href="{{ route('owner.settings') }}" onclick="closeSidebar()">
-                <span class="nav-icon">⚙️</span> Pengaturan Toko
+            <a class="nav-link {{ request()->routeIs('owner.settings') ? 'active' : '' }}" href="{{ route('owner.settings') }}" onclick="closeSidebar()" title="Pengaturan Toko">
+                <span class="nav-icon">⚙️</span><span class="nav-text"> Pengaturan Toko</span>
             </a>
         @else
             {{-- CASHIER SIDEBAR --}}
             <div class="nav-section">Operasional</div>
-            <a class="nav-link {{ request()->routeIs('cashier.pos') ? 'active' : '' }}" href="{{ route('cashier.pos') }}" onclick="closeSidebar()">
-                <span class="nav-icon">🛒</span> Transaksi Kasir
+            <a class="nav-link {{ request()->routeIs('cashier.pos') ? 'active' : '' }}" href="{{ route('cashier.pos') }}" onclick="closeSidebar()" title="Transaksi Kasir">
+                <span class="nav-icon">🛒</span><span class="nav-text"> Transaksi Kasir</span>
             </a>
-            <a class="nav-link {{ request()->routeIs('cashier.history') ? 'active' : '' }}" href="{{ route('cashier.history') }}" onclick="closeSidebar()">
-                <span class="nav-icon">🧾</span> Riwayat Transaksi
+            <a class="nav-link {{ request()->routeIs('cashier.history') ? 'active' : '' }}" href="{{ route('cashier.history') }}" onclick="closeSidebar()" title="Riwayat Transaksi">
+                <span class="nav-icon">🧾</span><span class="nav-text"> Riwayat Transaksi</span>
             </a>
-            <a class="nav-link {{ request()->routeIs('products.index') ? 'active' : '' }}" href="{{ route('products.index') }}" onclick="closeSidebar()">
-                <span class="nav-icon">📦</span> Input Barang
+            <a class="nav-link {{ request()->routeIs('products.index') ? 'active' : '' }}" href="{{ route('products.index') }}" onclick="closeSidebar()" title="Input Barang">
+                <span class="nav-icon">📦</span><span class="nav-text"> Input Barang</span>
             </a>
         @endif
 
         <form method="post" action="{{ route('logout') }}">
             @csrf
-            <button class="logout-button">⬅ Keluar</button>
+            <button class="logout-button" title="Keluar">⬅<span class="nav-text"> Keluar</span></button>
         </form>
     </aside>
 
@@ -128,6 +129,23 @@
 <script src="{{ asset('js/pos.js') }}?v={{ filemtime(public_path('js/pos.js')) }}"></script>
 <script src="{{ asset('js/pricing.js') }}?v={{ filemtime(public_path('js/pricing.js')) }}"></script>
 <script>
+// ── Sidebar collapse (icon-only mode) ───────────────────────
+function toggleSidebarCollapse() {
+    var shell = document.querySelector('.app-shell');
+    var btn   = document.querySelector('.sidebar-collapse-btn');
+    var collapsed = shell.classList.toggle('sidebar-collapsed');
+    btn.textContent = collapsed ? '▶' : '◀';
+    try { localStorage.setItem('sidebar_collapsed', collapsed ? '1' : '0'); } catch(e) {}
+}
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        if (localStorage.getItem('sidebar_collapsed') === '1') {
+            document.querySelector('.app-shell').classList.add('sidebar-collapsed');
+            document.querySelector('.sidebar-collapse-btn').textContent = '▶';
+        }
+    } catch(e) {}
+});
+
 // ── Sidebar drawer ──────────────────────────────────────────
 function toggleSidebar() {
     var s = document.getElementById('appSidebar');
