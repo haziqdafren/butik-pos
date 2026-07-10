@@ -6,7 +6,7 @@
     <title>{{ $title ?? 'Butik POS' }}</title>
     <link rel="stylesheet" href="{{ asset('css/pos.css') }}?v={{ filemtime(public_path('css/pos.css')) }}">
     <script>
-    // Run before render to avoid flash — restore sidebar collapsed state
+    // Run BEFORE first paint to prevent sidebar flash on collapsed state
     (function() {
         try {
             if (localStorage.getItem('sidebar_collapsed') === '1') {
@@ -149,6 +149,9 @@ function toggleSidebarCollapse() {
     try { localStorage.setItem('sidebar_collapsed', collapsed ? '1' : '0'); } catch(e) {}
 }
 document.addEventListener('DOMContentLoaded', function() {
+    // Hand off collapse state from pre-render html class → body class
+    // CRITICAL: remove the init class from <html> so it doesn't permanently override body toggling
+    document.documentElement.classList.remove('sidebar-collapsed-init');
     try {
         if (localStorage.getItem('sidebar_collapsed') === '1') {
             document.body.classList.add('sidebar-collapsed');

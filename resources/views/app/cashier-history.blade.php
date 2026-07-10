@@ -80,7 +80,9 @@
         if (_btDevice && _btDevice.gatt.connected && _btChar) {
             return { device: _btDevice, char: _btChar };
         }
-        if (navigator.bluetooth.getDevices) {
+        // Try getDevices() silently if user has paired before (no picker, no flash)
+        const wasPaired = localStorage.getItem('bt_printer_paired') === '1';
+        if (navigator.bluetooth.getDevices && wasPaired) {
             try {
                 const paired  = await navigator.bluetooth.getDevices();
                 const printer = paired.find(d => d.name === 'RPP02N');
@@ -108,6 +110,8 @@
         if (!char) throw new Error('Printer tidak valid.');
         _btDevice = device;
         _btChar   = char;
+        // Mark as paired so next page load skips the picker
+        try { localStorage.setItem('bt_printer_paired', '1'); } catch(_) {}
         return { device, char };
     }
 

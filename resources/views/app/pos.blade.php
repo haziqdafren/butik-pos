@@ -265,8 +265,11 @@
         if (_btDevice && _btDevice.gatt.connected && _btChar) {
             return { device: _btDevice, char: _btChar };
         }
-        // 2. Try previously-paired device via getDevices() — no picker, needs Permissions-Policy header
-        if (navigator.bluetooth.getDevices) {
+        // 2. Try previously-paired device via getDevices() — no picker
+        //    This works across page reloads if Permissions-Policy: bluetooth=* is set
+        //    and the user previously paired through the picker on this browser.
+        const wasPaired = localStorage.getItem('bt_printer_paired') === '1';
+        if (navigator.bluetooth.getDevices && wasPaired) {
             try {
                 const paired  = await navigator.bluetooth.getDevices();
                 const printer = paired.find(d => d.name === 'RPP02N');
@@ -281,7 +284,7 @@
                 }
             } catch (_) {}
         }
-        // 3. Full picker — only on very first use ever
+        // 3. Full picker — only on very first use ever (or if getDevices not supported)
         const device = await navigator.bluetooth.requestDevice({
             filters: [{ name: 'RPP02N' }],
             optionalServices: [
@@ -295,6 +298,8 @@
         if (!char) throw new Error('Printer tidak valid — karakteristik write tidak ditemukan.');
         _btDevice = device;
         _btChar   = char;
+        // Remember that user has paired once — future page loads will try getDevices() first
+        try { localStorage.setItem('bt_printer_paired', '1'); } catch(_) {}
         return { device, char };
     }
 
