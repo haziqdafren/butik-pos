@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $title ?? 'Butik POS' }}</title>
     <link rel="stylesheet" href="{{ asset('css/pos.css') }}?v={{ filemtime(public_path('css/pos.css')) }}">
+    <script>
+    // Run before render to avoid flash — restore sidebar collapsed state
+    (function() {
+        try {
+            if (localStorage.getItem('sidebar_collapsed') === '1') {
+                document.documentElement.classList.add('sidebar-collapsed-init');
+            }
+        } catch(e) {}
+    })();
+    </script>
 </head>
 <body>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
@@ -135,15 +145,12 @@
 <script>
 // ── Sidebar collapse (fully hide / show) ────────────────────
 function toggleSidebarCollapse() {
-    var shell     = document.querySelector('.app-shell');
-    var collapsed = shell.classList.toggle('sidebar-collapsed');
-    document.body.classList.toggle('sidebar-collapsed', collapsed);
+    var collapsed = document.body.classList.toggle('sidebar-collapsed');
     try { localStorage.setItem('sidebar_collapsed', collapsed ? '1' : '0'); } catch(e) {}
 }
 document.addEventListener('DOMContentLoaded', function() {
     try {
         if (localStorage.getItem('sidebar_collapsed') === '1') {
-            document.querySelector('.app-shell').classList.add('sidebar-collapsed');
             document.body.classList.add('sidebar-collapsed');
         }
     } catch(e) {}

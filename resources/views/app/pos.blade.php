@@ -256,20 +256,32 @@
         return null;
     }
 
-    // Try previously-paired device first (no picker); fall back to requestDevice.
+    // Cache connected printer for the page session — avoids picker on repeat prints
+    let _btDevice = null;
+    let _btChar   = null;
+
     async function btGetPrinter() {
+        // 1. Reuse already-connected device from this page session
+        if (_btDevice && _btDevice.gatt.connected && _btChar) {
+            return { device: _btDevice, char: _btChar };
+        }
+        // 2. Try previously-paired device via getDevices() — no picker, needs Permissions-Policy header
         if (navigator.bluetooth.getDevices) {
             try {
-                const paired   = await navigator.bluetooth.getDevices();
-                const printer  = paired.find(d => d.name === 'RPP02N');
+                const paired  = await navigator.bluetooth.getDevices();
+                const printer = paired.find(d => d.name === 'RPP02N');
                 if (printer) {
                     const server = await printer.gatt.connect();
                     const char   = await btFindPrintChar(server);
-                    if (char) return { device: printer, char };
+                    if (char) {
+                        _btDevice = printer;
+                        _btChar   = char;
+                        return { device: printer, char };
+                    }
                 }
             } catch (_) {}
         }
-        // Full picker — only shown on first use or if pairing was lost
+        // 3. Full picker — only on very first use ever
         const device = await navigator.bluetooth.requestDevice({
             filters: [{ name: 'RPP02N' }],
             optionalServices: [
@@ -281,6 +293,8 @@
         const server = await device.gatt.connect();
         const char   = await btFindPrintChar(server);
         if (!char) throw new Error('Printer tidak valid — karakteristik write tidak ditemukan.');
+        _btDevice = device;
+        _btChar   = char;
         return { device, char };
     }
 

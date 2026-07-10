@@ -73,7 +73,13 @@
         return null;
     }
 
+    let _btDevice = null;
+    let _btChar   = null;
+
     async function btGetPrinter() {
+        if (_btDevice && _btDevice.gatt.connected && _btChar) {
+            return { device: _btDevice, char: _btChar };
+        }
         if (navigator.bluetooth.getDevices) {
             try {
                 const paired  = await navigator.bluetooth.getDevices();
@@ -81,7 +87,11 @@
                 if (printer) {
                     const server = await printer.gatt.connect();
                     const char   = await btFindPrintChar(server);
-                    if (char) return { device: printer, char };
+                    if (char) {
+                        _btDevice = printer;
+                        _btChar   = char;
+                        return { device: printer, char };
+                    }
                 }
             } catch (_) {}
         }
@@ -96,6 +106,8 @@
         const server = await device.gatt.connect();
         const char   = await btFindPrintChar(server);
         if (!char) throw new Error('Printer tidak valid.');
+        _btDevice = device;
+        _btChar   = char;
         return { device, char };
     }
 

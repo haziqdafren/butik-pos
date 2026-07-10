@@ -85,7 +85,8 @@ button, input, select, textarea { font: inherit; }
 }
 
 /* Collapsed: slide fully off-screen to the left */
-body.sidebar-collapsed .sidebar {
+body.sidebar-collapsed .sidebar,
+html.sidebar-collapsed-init .sidebar {
     transform: translateX(calc(-1 * var(--sidebar-w)));
     box-shadow: none;
 }
@@ -99,7 +100,8 @@ body.sidebar-collapsed .sidebar {
     min-height: 100svh;
     transition: margin-left .3s cubic-bezier(.4,0,.2,1);
 }
-body.sidebar-collapsed .main { margin-left: 0; }
+body.sidebar-collapsed .main,
+html.sidebar-collapsed-init .main { margin-left: 0; }
 
 /* ── Sidebar header ──────────────────────────────────────── */
 .sidebar-header {
