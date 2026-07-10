@@ -111,16 +111,16 @@ class AppController extends Controller
         ]);
     }
 
-    public function pos(): View
+    public function pos()
     {
-        return view('app.pos', [
+        return response()->view('app.pos', [
             'products' => Product::query()
                 ->with('store:id,name')
                 ->where('stock', '>', 0)
                 ->orderBy('name')
                 ->get(['id', 'name', 'sku', 'category', 'color', 'size', 'selling_price', 'cost_price', 'stock', 'store_id']),
             'stores' => Store::query()->orderBy('name')->get(['id', 'name']),
-        ]);
+        ])->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
     }
 
     public function cashierHistory(): View
@@ -229,7 +229,7 @@ class AppController extends Controller
         return back()->with('status', "{$count} barang berhasil ditambahkan.");
     }
 
-    public function checkout(Request $request, PosService $service): RedirectResponse
+    public function checkout(Request $request, PosService $service, SettingsService $settings)
     {
         $payload = $request->validate([
             'store_id' => ['required', 'exists:stores,id'],
@@ -247,6 +247,12 @@ class AppController extends Controller
         try {
             $sale = $service->checkout(auth()->user(), $payload);
         } catch (\RuntimeException $exception) {
+            if ($request->wantsJson() || $request->ajax() || $request->has('ajax_checkout')) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => $exception->getMessage(),
+                ], 400);
+            }
             return back()->withInput()->withErrors(['checkout' => $exception->getMessage()]);
         }
 
@@ -254,9 +260,41 @@ class AppController extends Controller
             $sale->update(['stock_source_store_id' => $payload['stock_source']]);
         }
 
+        $message = "Transaksi {$sale->invoice_number} berhasil disimpan.";
+
+        if ($request->wantsJson() || $request->ajax() || $request->has('ajax_checkout')) {
+            $sale->load('items.product', 'cashier', 'store');
+            $allSettings = $settings->all();
+
+            return response()->json([
+                'status'          => 'success',
+                'message'         => $message,
+                'invoice_number'  => $sale->invoice_number,
+                'created_at'      => $sale->created_at->format('d/m/Y H:i'),
+                'store_name'      => $sale->store?->name ?: (!empty($allSettings['store_name']) ? $allSettings['store_name'] : config('app.name')),
+                'store_address'   => $sale->store?->address ?: ($allSettings['store_address'] ?? ''),
+                'store_phone'     => $allSettings['store_phone'] ?? '',
+                'cashier_name'    => $sale->cashier?->name ?? 'Kasir',
+                'items'           => $sale->items->map(fn($i) => [
+                    'name'       => $i->name,
+                    'attrs'      => array_values(array_filter([$i->product?->color, $i->product?->size])),
+                    'qty'        => $i->qty,
+                    'unit_price' => $i->unit_price,
+                    'line_total' => $i->line_total,
+                ]),
+                'subtotal'        => $sale->subtotal,
+                'discount_amount' => $sale->discount_amount,
+                'total'           => $sale->total,
+                'payment_method'  => $sale->payment_method,
+                'amount_paid'     => $sale->amount_paid,
+                'change'          => $sale->change,
+                'receipt_footer'  => !empty($allSettings['receipt_footer']) ? $allSettings['receipt_footer'] : 'Terima kasih telah berbelanja!',
+            ]);
+        }
+
         return redirect()
             ->route('cashier.pos')
-            ->with('status', "Transaksi {$sale->invoice_number} berhasil disimpan.")
+            ->with('status', $message)
             ->with('print_sale_id', $sale->id);
     }
 
@@ -396,14 +434,44 @@ class AppController extends Controller
         return redirect()->route('owner.settings')->with('status', 'Pengaturan berhasil disimpan.');
     }
 
-    public function receipt(Request $request, Sale $sale, SettingsService $settings): View
+    public function receipt(Request $request, Sale $sale, SettingsService $settings)
     {
+        abort_unless(auth()->user()->isOwner() || $sale->user_id === auth()->id(), 403);
+
         $sale->load('items.product', 'cashier', 'store');
+        $allSettings = $settings->all();
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'status'          => 'success',
+                'invoice_number'  => $sale->invoice_number,
+                'created_at'      => $sale->created_at->format('d/m/Y H:i'),
+                'store_name'      => $sale->store?->name ?: (!empty($allSettings['store_name']) ? $allSettings['store_name'] : config('app.name')),
+                'store_address'   => $sale->store?->address ?: ($allSettings['store_address'] ?? ''),
+                'store_phone'     => $allSettings['store_phone'] ?? '',
+                'cashier_name'    => $sale->cashier?->name ?? 'Kasir',
+                'items'           => $sale->items->map(fn($i) => [
+                    'name'       => $i->name,
+                    'attrs'      => array_values(array_filter([$i->product?->color, $i->product?->size])),
+                    'qty'        => $i->qty,
+                    'unit_price' => $i->unit_price,
+                    'line_total' => $i->line_total,
+                ]),
+                'subtotal'        => $sale->subtotal,
+                'discount_amount' => $sale->discount_amount,
+                'total'           => $sale->total,
+                'payment_method'  => $sale->payment_method,
+                'amount_paid'     => $sale->amount_paid,
+                'change'          => $sale->change,
+                'receipt_footer'  => !empty($allSettings['receipt_footer']) ? $allSettings['receipt_footer'] : 'Terima kasih telah berbelanja!',
+            ]);
+        }
 
         return view('app.receipt', [
-            'sale'      => $sale,
-            'settings'  => $settings->all(),
-            'autoPrint' => !$request->boolean('reprint') && $settings->getBool('auto_print_receipt', true),
+            'sale'          => $sale,
+            'settings'      => $allSettings,
+            'autoPrint'     => !$request->boolean('reprint') && $settings->getBool('auto_print_receipt', true),
+            'afterPrintUrl' => $request->boolean('checkout') ? route('cashier.pos') : null,
         ]);
     }
 

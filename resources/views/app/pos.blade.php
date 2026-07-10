@@ -102,7 +102,7 @@
             <h3>Keranjang Transaksi</h3>
             <div data-cart-list><p class="muted">Keranjang masih kosong.</p></div>
 
-            <form method="post" action="{{ route('sales.checkout') }}" style="margin-top:16px" data-pos-checkout-form>
+            <form method="post" action="{{ route('sales.checkout') }}" style="margin-top:16px" id="checkoutForm" data-pos-checkout-form>
                 @csrf
                 <input type="hidden" name="store_id" id="checkoutStoreId" value="{{ auth()->user()->store_id }}">
                 <div class="field" style="margin-bottom:12px">
@@ -240,4 +240,170 @@
             })();
         </script>
     @endif
+
+    <script>
+    // ── Shared Bluetooth printer helpers ────────────────────────────────────────
+    async function btFindPrintChar(server) {
+        const services = await server.getPrimaryServices();
+        for (const service of services) {
+            const chars = await service.getCharacteristics();
+            for (const char of chars) {
+                if (char.properties.write || char.properties.writeWithoutResponse) {
+                    return char;
+                }
+            }
+        }
+        return null;
+    }
+
+    // Try previously-paired device first (no picker); fall back to requestDevice.
+    async function btGetPrinter() {
+        if (navigator.bluetooth.getDevices) {
+            try {
+                const paired   = await navigator.bluetooth.getDevices();
+                const printer  = paired.find(d => d.name === 'RPP02N');
+                if (printer) {
+                    const server = await printer.gatt.connect();
+                    const char   = await btFindPrintChar(server);
+                    if (char) return { device: printer, char };
+                }
+            } catch (_) {}
+        }
+        // Full picker — only shown on first use or if pairing was lost
+        const device = await navigator.bluetooth.requestDevice({
+            filters: [{ name: 'RPP02N' }],
+            optionalServices: [
+                '000018f0-0000-1000-8000-00805f9b34fb',
+                'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
+                '49535343-fe7d-4ae5-8fa9-9fafd205e455'
+            ]
+        });
+        const server = await device.gatt.connect();
+        const char   = await btFindPrintChar(server);
+        if (!char) throw new Error('Printer tidak valid — karakteristik write tidak ditemukan.');
+        return { device, char };
+    }
+
+    // Build and send ESC/POS bytes for a receipt JSON payload.
+    async function btPrintReceipt(printChar, res) {
+        const encoder = new TextEncoder();
+        const data    = [];
+        const push     = arr  => data.push(...arr);
+        const pushLine = str  => data.push(...encoder.encode(str + '\n'));
+        const fmtRp    = num  => 'Rp ' + new Intl.NumberFormat('id-ID').format(num);
+        const fmtNum   = num  => new Intl.NumberFormat('id-ID').format(num);
+        const pad      = (l, r, w) => { const sp = Math.max(0, w - l.length - r.length); return l + ' '.repeat(sp) + r; };
+
+        push([0x1B, 0x40]);         // init
+        push([0x1B, 0x61, 0x01]);   // center
+        pushLine(res.store_name);
+        if (res.store_address) pushLine(res.store_address);
+        if (res.store_phone)   pushLine(res.store_phone);
+        pushLine('--------------------------------');
+
+        push([0x1B, 0x61, 0x00]);   // left
+        pushLine('Kasir   : ' + res.cashier_name);
+        pushLine('Tanggal : ' + res.created_at);
+        pushLine('Invoice : ' + res.invoice_number);
+        pushLine('--------------------------------');
+
+        res.items.forEach(i => {
+            pushLine(i.name);
+            if (i.attrs && i.attrs.length) pushLine(i.attrs.join(' \u00b7 '));
+            pushLine(pad(i.qty + 'x', fmtRp(i.line_total), 32));
+        });
+        pushLine('--------------------------------');
+        pushLine(pad('Subtotal', fmtNum(res.subtotal), 32));
+        if (res.discount_amount > 0) {
+            pushLine(pad('Diskon', '- ' + fmtNum(res.discount_amount), 32));
+        }
+        pushLine('--------------------------------');
+        push([0x1B, 0x45, 0x01]);   // bold on
+        pushLine(pad('TOTAL', fmtRp(res.total), 32));
+        push([0x1B, 0x45, 0x00]);   // bold off
+        pushLine('--------------------------------');
+        pushLine(pad(res.payment_method, fmtNum(res.amount_paid), 32));
+        pushLine(pad('Kembalian', fmtNum(res.change), 32));
+        pushLine('================================');
+        push([0x1B, 0x61, 0x01]);   // center
+        pushLine(res.receipt_footer || 'Terima kasih telah berbelanja!');
+        push([0x0A, 0x0A, 0x0A]);   // feed
+
+        const bytes = new Uint8Array(data);
+        for (let i = 0; i < bytes.length; i += 100) {
+            await printChar.writeValue(bytes.slice(i, i + 100));
+        }
+    }
+
+    function btnSet(btn, text, disabled) {
+        if (!btn) return;
+        btn.textContent = text;
+        btn.disabled    = disabled;
+    }
+
+    // ── Checkout form: Bluetooth path ──────────────────────────────────────────
+    document.getElementById('checkoutForm').addEventListener('submit', async function(e) {
+        if (!navigator.bluetooth) return; // let normal form submit happen
+        e.preventDefault();
+
+        const btn          = this.querySelector('button[type=submit], button:not([type])') || this.querySelector('button');
+        const originalText = btn ? btn.textContent : '';
+        btnSet(btn, 'Memulai Printer...', true);
+
+        let printer;
+        try {
+            printer = await btGetPrinter();
+        } catch (err) {
+            btnSet(btn, originalText, false);
+            if (err.name !== 'NotFoundError') {
+                if (typeof showToast === 'function') showToast('Koneksi printer gagal: ' + err.message, 'warn');
+            }
+            if (confirm('Lanjutkan transaksi tanpa cetak Bluetooth?')) {
+                this.submit();
+            }
+            return;
+        }
+
+        btnSet(btn, 'Menyimpan...', true);
+
+        try {
+            const formData = new FormData(this);
+            formData.append('ajax_checkout', '1');
+            const response = await fetch(this.action, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+                },
+                body: formData
+            });
+            const res = await response.json();
+
+            if (!response.ok) {
+                const msg = res.errors ? Object.values(res.errors)[0][0] : (res.message || 'Gagal checkout');
+                if (typeof showToast === 'function') showToast(msg, 'error');
+                btnSet(btn, originalText, false);
+                if (printer.device.gatt.connected) printer.device.gatt.disconnect();
+                return;
+            }
+
+            btnSet(btn, 'Mencetak...', true);
+            await btPrintReceipt(printer.char, res);
+
+            if (typeof showToast === 'function') showToast('Transaksi & cetak berhasil!');
+            setTimeout(() => {
+                if (printer.device.gatt.connected) printer.device.gatt.disconnect();
+                window.location.href = window.location.pathname;
+            }, 1500);
+
+        } catch (err) {
+            console.error(err);
+            if (typeof showToast === 'function') showToast('Kesalahan cetak: ' + err.message, 'error');
+            btnSet(btn, originalText, false);
+            setTimeout(() => window.location.href = window.location.pathname, 2000);
+        }
+    });
+    </script>
 </x-layouts.app>

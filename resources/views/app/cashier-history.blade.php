@@ -45,10 +45,7 @@
                                     <button type="button"
                                             id="cetak-btn-{{ $sale->id }}"
                                             class="button secondary mini"
-                                            onclick="(function(){
-                                                var p = window.open('/kasir/struk/{{ $sale->id }}?reprint=1', 'receipt_{{ $sale->id }}', 'width=340,height=700,scrollbars=yes,resizable=yes');
-                                                if (!p) window.open('/kasir/struk/{{ $sale->id }}?reprint=1', '_blank');
-                                            })()">Cetak</button>
+                                            onclick="printReceiptBluetooth({{ $sale->id }}, this)">Cetak</button>
                                     <label class="button danger mini" for="sale-void-{{ $sale->id }}">Batalkan</label>
                                 @endif
                             </div>
@@ -62,6 +59,151 @@
         </div>
         <x-pager :paginator="$sales" />
     </section>
+
+    <script>
+    // ── Bluetooth helpers (reprint) ─────────────────────────────────────────────
+    async function btFindPrintChar(server) {
+        const services = await server.getPrimaryServices();
+        for (const service of services) {
+            const chars = await service.getCharacteristics();
+            for (const char of chars) {
+                if (char.properties.write || char.properties.writeWithoutResponse) return char;
+            }
+        }
+        return null;
+    }
+
+    async function btGetPrinter() {
+        if (navigator.bluetooth.getDevices) {
+            try {
+                const paired  = await navigator.bluetooth.getDevices();
+                const printer = paired.find(d => d.name === 'RPP02N');
+                if (printer) {
+                    const server = await printer.gatt.connect();
+                    const char   = await btFindPrintChar(server);
+                    if (char) return { device: printer, char };
+                }
+            } catch (_) {}
+        }
+        const device = await navigator.bluetooth.requestDevice({
+            filters: [{ name: 'RPP02N' }],
+            optionalServices: [
+                '000018f0-0000-1000-8000-00805f9b34fb',
+                'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
+                '49535343-fe7d-4ae5-8fa9-9fafd205e455'
+            ]
+        });
+        const server = await device.gatt.connect();
+        const char   = await btFindPrintChar(server);
+        if (!char) throw new Error('Printer tidak valid.');
+        return { device, char };
+    }
+
+    async function btPrintReceipt(printChar, res) {
+        const encoder = new TextEncoder();
+        const data    = [];
+        const push     = arr => data.push(...arr);
+        const pushLine = str => data.push(...encoder.encode(str + '\n'));
+        const fmtRp    = n   => 'Rp ' + new Intl.NumberFormat('id-ID').format(n);
+        const fmtNum   = n   => new Intl.NumberFormat('id-ID').format(n);
+        const pad      = (l, r, w) => l + ' '.repeat(Math.max(0, w - l.length - r.length)) + r;
+
+        push([0x1B, 0x40]);
+        push([0x1B, 0x61, 0x01]);
+        pushLine(res.store_name);
+        if (res.store_address) pushLine(res.store_address);
+        if (res.store_phone)   pushLine(res.store_phone);
+        pushLine('--------------------------------');
+        push([0x1B, 0x61, 0x00]);
+        pushLine('Kasir   : ' + res.cashier_name);
+        pushLine('Tanggal : ' + res.created_at);
+        pushLine('Invoice : ' + res.invoice_number);
+        pushLine('--------------------------------');
+        res.items.forEach(i => {
+            pushLine(i.name);
+            if (i.attrs && i.attrs.length) pushLine(i.attrs.join(' \u00b7 '));
+            pushLine(pad(i.qty + 'x', fmtRp(i.line_total), 32));
+        });
+        pushLine('--------------------------------');
+        pushLine(pad('Subtotal', fmtNum(res.subtotal), 32));
+        if (res.discount_amount > 0) pushLine(pad('Diskon', '- ' + fmtNum(res.discount_amount), 32));
+        pushLine('--------------------------------');
+        push([0x1B, 0x45, 0x01]);
+        pushLine(pad('TOTAL', fmtRp(res.total), 32));
+        push([0x1B, 0x45, 0x00]);
+        pushLine('--------------------------------');
+        pushLine(pad(res.payment_method, fmtNum(res.amount_paid), 32));
+        pushLine(pad('Kembalian', fmtNum(res.change), 32));
+        pushLine('================================');
+        push([0x1B, 0x61, 0x01]);
+        pushLine(res.receipt_footer || 'Terima kasih telah berbelanja!');
+        push([0x0A, 0x0A, 0x0A]);
+
+        const bytes = new Uint8Array(data);
+        for (let i = 0; i < bytes.length; i += 100) {
+            await printChar.writeValue(bytes.slice(i, i + 100));
+        }
+    }
+
+    async function printReceiptBluetooth(saleId, btn) {
+        if (!navigator.bluetooth) {
+            // Fallback: open receipt popup
+            var url = '/kasir/struk/' + saleId + '?reprint=1';
+            var p = window.open(url, 'receipt_' + saleId, 'width=340,height=700,scrollbars=yes,resizable=yes');
+            if (!p) window.open(url, '_blank');
+            return;
+        }
+
+        const originalText = btn.textContent;
+        btn.disabled  = true;
+        btn.textContent = 'Memulai...';
+
+        let printer;
+        try {
+            printer = await btGetPrinter();
+        } catch (err) {
+            btn.disabled  = false;
+            btn.textContent = originalText;
+            if (err.name !== 'NotFoundError') {
+                if (typeof showToast === 'function') showToast('Koneksi printer gagal: ' + err.message, 'warn');
+            }
+            return;
+        }
+
+        btn.textContent = 'Mengambil...';
+
+        try {
+            const response = await fetch('/kasir/struk/' + saleId, {
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const res = await response.json();
+
+            if (!response.ok) {
+                if (typeof showToast === 'function') showToast(res.message || 'Gagal mengambil struk', 'error');
+                btn.disabled  = false;
+                btn.textContent = originalText;
+                if (printer.device.gatt.connected) printer.device.gatt.disconnect();
+                return;
+            }
+
+            btn.textContent = 'Mencetak...';
+            await btPrintReceipt(printer.char, res);
+
+            if (typeof showToast === 'function') showToast('Struk berhasil dicetak!');
+            setTimeout(() => {
+                btn.disabled  = false;
+                btn.textContent = originalText;
+                if (printer.device.gatt.connected) printer.device.gatt.disconnect();
+            }, 1500);
+
+        } catch (err) {
+            console.error(err);
+            if (typeof showToast === 'function') showToast('Kesalahan cetak: ' + err.message, 'error');
+            btn.disabled  = false;
+            btn.textContent = originalText;
+        }
+    }
+    </script>
 
     @foreach($sales as $sale)
         {{-- Modal Detail --}}
