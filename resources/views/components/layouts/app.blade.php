@@ -5,6 +5,55 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $title ?? 'Butik POS' }}</title>
     <link rel="stylesheet" href="{{ asset('css/pos.css') }}?v={{ filemtime(public_path('css/pos.css')) }}">
+    <style>
+    /* Override stale pos.css — sidebar collapse fix */
+    .app-shell { min-height: 100svh; }
+    .sidebar {
+        position: fixed !important;
+        top: 0; left: 0;
+        width: 246px;
+        height: 100svh;
+        z-index: 40;
+        transform: translateX(0);
+        transition: transform .3s cubic-bezier(.4,0,.2,1), box-shadow .3s ease;
+    }
+    body.sidebar-collapsed .sidebar,
+    html.sidebar-collapsed-init .sidebar {
+        transform: translateX(-246px) !important;
+        box-shadow: none !important;
+    }
+    .main {
+        margin-left: 246px;
+        transition: margin-left .3s cubic-bezier(.4,0,.2,1);
+    }
+    body.sidebar-collapsed .main,
+    html.sidebar-collapsed-init .main { margin-left: 0 !important; }
+    .sidebar-toggle-btn {
+        display: flex; align-items: center; justify-content: center;
+        width: 36px; height: 36px;
+        background: none; border: none; cursor: pointer;
+        border-radius: 6px; color: var(--ink);
+        flex-shrink: 0; transition: background .15s;
+    }
+    .sidebar-toggle-btn:hover { background: #f4f7f9; }
+    .sidebar-toggle-icon {
+        display: block; width: 18px; height: 2px;
+        background: currentColor; border-radius: 2px; position: relative;
+    }
+    .sidebar-toggle-icon::before, .sidebar-toggle-icon::after {
+        content: ''; display: block; width: 18px; height: 2px;
+        background: currentColor; border-radius: 2px;
+        position: absolute; left: 0;
+    }
+    .sidebar-toggle-icon::before { top: -6px; }
+    .sidebar-toggle-icon::after  { top:  6px; }
+    @media (max-width: 820px) {
+        .sidebar { width: 272px; transform: translateX(-100%) !important; }
+        .sidebar.open { transform: translateX(0) !important; }
+        .main { margin-left: 0 !important; }
+        .sidebar-toggle-btn { display: none; }
+    }
+    </style>
     <script>
     // Run BEFORE first paint to prevent sidebar flash on collapsed state
     (function() {
