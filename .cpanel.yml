@@ -9,6 +9,8 @@ deployment:
     - /bin/cp -rf $REPOPATH/database $DEPLOYPATH/
     - /bin/cp -rf $REPOPATH/public/css $DEPLOYPATH/public/
     - /bin/cp -rf $REPOPATH/public/js $DEPLOYPATH/public/
+    - /bin/cp -f $REPOPATH/public/.htaccess $DEPLOYPATH/public/
+    - /bin/cp -f $REPOPATH/public/pull.php $DEPLOYPATH/public/
     - /bin/cp -rf $REPOPATH/resources $DEPLOYPATH/
     - /bin/cp -rf $REPOPATH/routes $DEPLOYPATH/
     - /bin/rm -rf $DEPLOYPATH/storage/framework/views/*
