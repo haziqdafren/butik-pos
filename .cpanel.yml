@@ -7,7 +7,7 @@ deployment:
     - /bin/cp -rf $REPOPATH/bootstrap $DEPLOYPATH/
     - /bin/cp -rf $REPOPATH/config $DEPLOYPATH/
     - /bin/cp -rf $REPOPATH/database $DEPLOYPATH/
-    - /bin/cp -rf $REPOPATH/public/css $DEPLOYPATH/public/
+    - /bin/cp -f $REPOPATH/public/css/pos.css $DEPLOYPATH/public/css/pos.css
     - /bin/cp -rf $REPOPATH/public/js $DEPLOYPATH/public/
     - /bin/cp -f $REPOPATH/public/.htaccess $DEPLOYPATH/public/
     - /bin/cp -f $REPOPATH/public/pull.php $DEPLOYPATH/public/

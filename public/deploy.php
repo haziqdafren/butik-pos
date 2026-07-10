@@ -77,18 +77,38 @@ try {
 }
 flush();
 
-// ── Step 4: Wipe & recreate database ────────────────────────────────────────
-echo "[ STEP 4 ] Wiping existing database ...\n";
-$dbPath = $root . '/database/database.sqlite';
-if (file_exists($dbPath)) {
-    unlink($dbPath);
-    echo "  DELETED: database.sqlite\n";
-} else {
-    echo "  SKIP: no existing database.sqlite found\n";
+// ── Step 4: Wipe existing data ──────────────────────────────────────────────
+echo "[ STEP 4 ] Wiping existing data ...\n";
+try {
+    $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+    $kernel->bootstrap();
+
+    $driver = config('database.default');
+    echo "  Driver: $driver\n";
+
+    if ($driver === 'sqlite') {
+        $dbPath = $root . '/database/database.sqlite';
+        if (file_exists($dbPath)) { unlink($dbPath); echo "  DELETED: database.sqlite\n"; }
+        touch($dbPath); chmod($dbPath, 0664);
+        echo "  CREATED: fresh empty database.sqlite\n";
+    } else {
+        // MySQL: disable FK checks, truncate all data tables, re-enable
+        Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        $tables = ['sale_corrections','sale_items','sales','purchases','discount_approvals','notifications','products','users','stores','store_settings','sessions','jobs','cache','migrations'];
+        foreach ($tables as $table) {
+            try {
+                Illuminate\Support\Facades\DB::table($table)->truncate();
+                echo "  TRUNCATED: $table\n";
+            } catch (Throwable $te) {
+                echo "  SKIP $table: " . $te->getMessage() . "\n";
+            }
+        }
+        Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1');
+    }
+} catch (Throwable $e) {
+    echo "  ERROR: " . $e->getMessage() . "\n";
 }
-touch($dbPath);
-chmod($dbPath, 0664);
-echo "  CREATED: fresh empty database.sqlite\n\n";
+echo "\n";
 flush();
 
 // ── Step 5: Migrations ───────────────────────────────────────────────────────
