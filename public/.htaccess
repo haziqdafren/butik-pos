@@ -1,3 +1,8 @@
+<IfModule mod_headers.c>
+    # Required for Web Bluetooth getDevices() — allows silent reconnect after first pair
+    Header always set Permissions-Policy "bluetooth=*"
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
