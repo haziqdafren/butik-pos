@@ -6,30 +6,73 @@
     <title>{{ $title ?? 'Butik POS' }}</title>
     <link rel="stylesheet" href="{{ asset('css/pos.css') }}?v={{ filemtime(public_path('css/pos.css')) }}">
     <style>
-    /* Override stale pos.css — sidebar collapse fix */
-    .app-shell { min-height: 100svh; }
+    /* ── Full layout override — bypasses stale pos.css grid layout ── */
+    .app-shell {
+        display: block !important;
+        min-height: 100svh;
+    }
     .sidebar {
         position: fixed !important;
         top: 0; left: 0;
-        width: 246px;
+        width: 246px !important;
         height: 100svh;
         z-index: 40;
         transform: translateX(0);
         transition: transform .3s cubic-bezier(.4,0,.2,1), box-shadow .3s ease;
+        overflow: hidden;
     }
+    /* Icon-only mode when collapsed: shrink to 54px showing only icons */
     body.sidebar-collapsed .sidebar,
     html.sidebar-collapsed-init .sidebar {
-        transform: translateX(-246px) !important;
-        box-shadow: none !important;
+        width: 54px !important;
+        transform: translateX(0) !important;
     }
+    /* Hide text labels in icon-only mode */
+    body.sidebar-collapsed .nav-text,
+    body.sidebar-collapsed .brand-sub,
+    body.sidebar-collapsed .role-card,
+    body.sidebar-collapsed .nav-section,
+    body.sidebar-collapsed .logout-button .nav-text,
+    html.sidebar-collapsed-init .nav-text,
+    html.sidebar-collapsed-init .brand-sub,
+    html.sidebar-collapsed-init .role-card,
+    html.sidebar-collapsed-init .nav-section,
+    html.sidebar-collapsed-init .logout-button .nav-text {
+        display: none !important;
+    }
+    /* Center icons when collapsed */
+    body.sidebar-collapsed .nav-link,
+    body.sidebar-collapsed .logout-button,
+    html.sidebar-collapsed-init .nav-link,
+    html.sidebar-collapsed-init .logout-button {
+        justify-content: center !important;
+        padding: 9px 0 !important;
+    }
+    body.sidebar-collapsed .sidebar-header,
+    html.sidebar-collapsed-init .sidebar-header {
+        display: flex; justify-content: center;
+    }
+    body.sidebar-collapsed .brand,
+    html.sidebar-collapsed-init .brand {
+        display: none !important;
+    }
+    /* Main content offset by sidebar width */
     .main {
-        margin-left: 246px;
+        margin-left: 246px !important;
+        width: auto !important;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        min-height: 100svh;
         transition: margin-left .3s cubic-bezier(.4,0,.2,1);
     }
     body.sidebar-collapsed .main,
-    html.sidebar-collapsed-init .main { margin-left: 0 !important; }
+    html.sidebar-collapsed-init .main {
+        margin-left: 54px !important;
+    }
+    /* Toggle button in topbar */
     .sidebar-toggle-btn {
-        display: flex; align-items: center; justify-content: center;
+        display: flex !important; align-items: center; justify-content: center;
         width: 36px; height: 36px;
         background: none; border: none; cursor: pointer;
         border-radius: 6px; color: var(--ink);
@@ -47,11 +90,18 @@
     }
     .sidebar-toggle-icon::before { top: -6px; }
     .sidebar-toggle-icon::after  { top:  6px; }
+    /* Mobile: full drawer, no icon-only */
     @media (max-width: 820px) {
-        .sidebar { width: 272px; transform: translateX(-100%) !important; }
+        .sidebar { width: 272px !important; transform: translateX(-100%) !important; }
         .sidebar.open { transform: translateX(0) !important; }
+        body.sidebar-collapsed .sidebar { width: 272px !important; transform: translateX(-100%) !important; }
+        body.sidebar-collapsed .nav-text,
+        body.sidebar-collapsed .brand-sub,
+        body.sidebar-collapsed .role-card,
+        body.sidebar-collapsed .nav-section { display: flex !important; }
         .main { margin-left: 0 !important; }
-        .sidebar-toggle-btn { display: none; }
+        body.sidebar-collapsed .main { margin-left: 0 !important; }
+        .sidebar-toggle-btn { display: none !important; }
     }
     </style>
     <script>
