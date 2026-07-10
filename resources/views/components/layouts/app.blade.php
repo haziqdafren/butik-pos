@@ -8,9 +8,10 @@
 </head>
 <body>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<button class="sidebar-reopen-btn" id="sidebarReopenBtn" onclick="toggleSidebarCollapse()" title="Buka sidebar">▶</button>
 <div class="app-shell">
     <aside class="sidebar" id="appSidebar">
-        <button class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" title="Collapse sidebar">◀</button>
+        <button class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" title="Sembunyikan sidebar">◀</button>
         <div class="brand">Butik POS</div>
         <div class="brand-sub">Retail management</div>
         <div class="role-card">
@@ -129,19 +130,20 @@
 <script src="{{ asset('js/pos.js') }}?v={{ filemtime(public_path('js/pos.js')) }}"></script>
 <script src="{{ asset('js/pricing.js') }}?v={{ filemtime(public_path('js/pricing.js')) }}"></script>
 <script>
-// ── Sidebar collapse (icon-only mode) ───────────────────────
+// ── Sidebar collapse (fully hide / show) ────────────────────
 function toggleSidebarCollapse() {
-    var shell = document.querySelector('.app-shell');
-    var btn   = document.querySelector('.sidebar-collapse-btn');
-    var collapsed = shell.classList.toggle('sidebar-collapsed');
-    btn.textContent = collapsed ? '▶' : '◀';
+    var shell       = document.querySelector('.app-shell');
+    var collapseBtn = document.querySelector('.sidebar-collapse-btn');
+    var collapsed   = shell.classList.toggle('sidebar-collapsed');
+    if (collapseBtn) collapseBtn.textContent = collapsed ? '▶' : '◀';
     try { localStorage.setItem('sidebar_collapsed', collapsed ? '1' : '0'); } catch(e) {}
 }
 document.addEventListener('DOMContentLoaded', function() {
     try {
         if (localStorage.getItem('sidebar_collapsed') === '1') {
             document.querySelector('.app-shell').classList.add('sidebar-collapsed');
-            document.querySelector('.sidebar-collapse-btn').textContent = '▶';
+            var cb = document.querySelector('.sidebar-collapse-btn');
+            if (cb) cb.textContent = '▶';
         }
     } catch(e) {}
 });
