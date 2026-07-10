@@ -53,86 +53,178 @@ button, input, select, textarea { font: inherit; }
 .login-card { padding: 36px; }
 
 /* ── App Shell ──────────────────────────────────────────── */
+/*
+ * Layout: sidebar is position:fixed, main is offset by --sidebar-w via margin-left.
+ * Collapsing slides the sidebar off-screen (translateX) and removes the margin.
+ * This avoids sticky/grid sizing bugs entirely.
+ */
 .app-shell {
     min-height: 100svh;
-    display: grid;
-    grid-template-columns: var(--sidebar-w) 1fr;
-    transition: grid-template-columns .25s ease;
 }
-.app-shell.sidebar-collapsed { grid-template-columns: 0 1fr; }
 
-/* Re-open button — fixed, outside grid, visible only when collapsed */
-.sidebar-reopen-btn {
-    display: none;
-    position: fixed;
-    top: 12px;
-    left: 12px;
-    z-index: 35;
-    background: var(--nav);
-    color: white;
-    border: none;
-    border-radius: var(--radius);
-    width: 34px;
-    height: 34px;
-    font-size: 15px;
-    cursor: pointer;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 8px rgba(16,33,41,.3);
-}
-.sidebar-reopen-btn:hover { background: var(--accent); }
-body.sidebar-collapsed .sidebar-reopen-btn { display: flex; }
-
-/* ── Sidebar ────────────────────────────────────────────── */
+/* ── Sidebar ─────────────────────────────────────────────── */
 .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: var(--sidebar-w);
+    height: 100svh;
     background: var(--nav);
     color: white;
-    padding: 20px 14px;
-    position: sticky;
-    top: 0;
-    height: 100svh;
-    overflow: hidden;
+    padding: 24px 16px 20px;
     z-index: 30;
     display: flex;
     flex-direction: column;
-    width: var(--sidebar-w);
-    transition: width .25s ease, padding .25s ease, visibility .25s;
+    overflow-y: auto;
+    overflow-x: hidden;
+    transform: translateX(0);
+    transition: transform .28s cubic-bezier(.4,0,.2,1),
+                box-shadow .28s ease;
+    box-shadow: 2px 0 16px rgba(16,33,41,.10);
+    /* Subtle inner border */
+    border-right: 1px solid rgba(255,255,255,.06);
+}
+
+/* Collapsed: slide fully off-screen */
+body.sidebar-collapsed .sidebar {
+    transform: translateX(calc(-1 * var(--sidebar-w)));
+    box-shadow: none;
+}
+
+/* ── Main: offset by sidebar width ─────────────────────── */
+.main {
+    margin-left: var(--sidebar-w);
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100svh;
+    transition: margin-left .28s cubic-bezier(.4,0,.2,1);
+}
+body.sidebar-collapsed .main { margin-left: 0; }
+
+/* ── Sidebar header area ─────────────────────────────────── */
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+.brand { font-size: 18px; font-weight: 800; letter-spacing: .2px; line-height: 1.2; }
+.brand-sub { color: #7a9baa; font-size: 10px; text-transform: uppercase; letter-spacing: 1.6px; margin-top: 2px; }
+
+/* ── Collapse toggle (inside sidebar) ───────────────────── */
+.sidebar-collapse-btn {
+    background: rgba(255,255,255,.07);
+    border: 1px solid rgba(255,255,255,.10);
+    color: #98aab3;
+    cursor: pointer;
+    font-size: 13px;
+    padding: 5px 8px;
+    border-radius: 6px;
+    line-height: 1;
     flex-shrink: 0;
+    transition: background .15s, color .15s;
 }
-.app-shell.sidebar-collapsed .sidebar {
-    width: 0;
-    padding: 0;
-    visibility: hidden;
+.sidebar-collapse-btn:hover { background: rgba(255,255,255,.14); color: white; }
+
+/* ── Reopen button — fixed pill, visible only when collapsed ─ */
+.sidebar-reopen-btn {
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 40;
+    background: var(--nav);
+    color: white;
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(16,33,41,.22);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-8px);
+    transition: opacity .22s ease, transform .22s ease;
+}
+.sidebar-reopen-btn:hover { background: var(--accent); border-color: var(--accent); }
+body.sidebar-collapsed .sidebar-reopen-btn {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(0);
 }
 
-/* Collapse toggle */
-.sidebar-collapse-btn { background: none; border: none; color: #98aab3; cursor: pointer; font-size: 18px; padding: 4px 6px; align-self: flex-end; line-height: 1; margin-bottom: 8px; }
-.sidebar-collapse-btn:hover { color: white; }
-.sidebar-collapsed .sidebar-collapse-btn { align-self: center; }
+/* ── Role card ───────────────────────────────────────────── */
+.role-card {
+    margin: 18px 0 6px;
+    padding: 10px 12px;
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: var(--radius);
+}
+.role-card small { display: block; color: #7a9baa; margin-bottom: 3px; font-size: 10px; text-transform: uppercase; letter-spacing: .8px; }
+.role-card strong { font-size: 13px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.role-card .muted { color: #7a9baa; font-size: 11px; margin-top: 1px; }
 
-.brand { font-size: 20px; font-weight: 800; margin-bottom: 3px; letter-spacing: .2px; }
-.brand-sub { color: #98aab3; font-size: 11px; text-transform: uppercase; letter-spacing: 1.4px; }
-.sidebar-collapsed .brand, .sidebar-collapsed .brand-sub { display: none; }
-
-.role-card { margin: 20px 0; padding: 11px 12px; background: var(--nav-soft); border: 1px solid rgba(255,255,255,.08); border-radius: var(--radius); }
-.role-card small { display: block; color: #a8bac2; margin-bottom: 4px; font-size: 11px; }
-.role-card strong { font-size: 14px; }
-.role-card .muted { color: #98aab3; font-size: 12px; }
-.sidebar-collapsed .role-card { display: none; }
-
-.nav-section { margin: 20px 8px 5px; color: #91a5ae; font-size: 10px; text-transform: uppercase; letter-spacing: 1.4px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.07); }
+/* ── Nav sections ────────────────────────────────────────── */
+.nav-section {
+    margin: 18px 4px 4px;
+    color: #4e6e7a;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 1.6px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255,255,255,.06);
+}
 .nav-section:first-of-type { margin-top: 4px; border-top: none; padding-top: 0; }
-.sidebar-collapsed .nav-section { display: none; }
 
-.nav-link { display: flex; align-items: center; gap: 9px; padding: 10px 11px; border-radius: var(--radius); color: #d8e3e7; margin-bottom: 2px; font-size: 14px; transition: background .12s; }
-.nav-link.active, .nav-link:hover { background: var(--accent); color: white; }
-.nav-icon { font-size: 18px; flex-shrink: 0; width: 20px; text-align: center; }
-.sidebar-collapsed .nav-link { padding: 10px; justify-content: center; gap: 0; title: attr(data-label); }
-.sidebar-collapsed .nav-link .nav-text { display: none; }
+/* ── Nav links ───────────────────────────────────────────── */
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 11px;
+    border-radius: var(--radius);
+    color: #b0c4cc;
+    margin-bottom: 1px;
+    font-size: 13.5px;
+    font-weight: 500;
+    transition: background .12s, color .12s;
+    white-space: nowrap;
+    overflow: hidden;
+}
+.nav-link:hover { background: rgba(255,255,255,.07); color: white; }
+.nav-link.active {
+    background: var(--accent);
+    color: white;
+    box-shadow: 0 2px 8px rgba(178,71,47,.30);
+}
+.nav-icon { font-size: 17px; flex-shrink: 0; width: 22px; text-align: center; }
+.nav-text { overflow: hidden; text-overflow: ellipsis; }
 
-.logout-button { width: 100%; margin-top: auto; padding: 10px; border: 1px solid rgba(255,255,255,.15); color: #a8bac2; background: transparent; border-radius: var(--radius); cursor: pointer; font-size: 13px; text-align: left; padding-left: 12px; }
-.logout-button:hover { background: rgba(255,255,255,.06); color: white; }
-.sidebar-collapsed .logout-button { padding: 10px; text-align: center; font-size: 16px; }
+/* ── Logout button ───────────────────────────────────────── */
+.logout-button {
+    width: 100%;
+    margin-top: auto;
+    padding: 9px 11px;
+    border: 1px solid rgba(255,255,255,.10);
+    color: #7a9baa;
+    background: transparent;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 13px;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background .12s, color .12s;
+    white-space: nowrap;
+    overflow: hidden;
+}
+.logout-button:hover { background: rgba(255,255,255,.07); color: white; }
 
 /* ── Hamburger (hidden on desktop) ─────────────────────── */
 .hamburger-btn {
@@ -407,25 +499,24 @@ tr:last-child td { border-bottom: none; }
 }
 
 /* ═══════════════════════════════════════════════════════
-   MOBILE (≤820px) — sidebar becomes off-canvas drawer
+   MOBILE (≤820px) — sidebar is off-canvas, main full-width
 ═══════════════════════════════════════════════════════ */
 @media (max-width: 820px) {
-    /* Shell: single column */
-    .app-shell { grid-template-columns: 1fr; }
+    /* Main takes full width — no sidebar offset */
+    .main { margin-left: 0 !important; }
 
-    /* Sidebar: fixed off-canvas drawer */
+    /* Sidebar: already fixed, just hidden by default */
     .sidebar {
-        position: fixed;
-        left: 0;
-        top: 0;
-        height: 100svh;
         width: 272px;
         transform: translateX(-100%);
-        transition: transform .25s cubic-bezier(.4,0,.2,1);
-        box-shadow: 4px 0 32px rgba(16,33,41,.18);
-        z-index: 30;
+        box-shadow: 4px 0 32px rgba(16,33,41,.22);
     }
-    .sidebar.open { transform: translateX(0); }
+    /* On mobile, "open" class shows it (hamburger); ignore collapse state */
+    .sidebar.open { transform: translateX(0) !important; }
+    /* Hide the desktop collapse button on mobile */
+    .sidebar-collapse-btn { display: none; }
+    /* Hide the reopen button on mobile */
+    .sidebar-reopen-btn { display: none !important; }
 
     /* Overlay */
     .sidebar-overlay {

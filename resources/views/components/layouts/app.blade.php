@@ -11,9 +11,13 @@
 <button class="sidebar-reopen-btn" id="sidebarReopenBtn" onclick="toggleSidebarCollapse()" title="Buka sidebar">▶</button>
 <div class="app-shell">
     <aside class="sidebar" id="appSidebar">
-        <button class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" title="Sembunyikan sidebar">◀</button>
-        <div class="brand">Butik POS</div>
-        <div class="brand-sub">Retail management</div>
+        <div class="sidebar-header">
+            <div>
+                <div class="brand">Butik POS</div>
+                <div class="brand-sub">Retail management</div>
+            </div>
+            <button class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" title="Sembunyikan sidebar">✕</button>
+        </div>
         <div class="role-card">
             <small>Login sebagai</small>
             <strong>{{ auth()->user()->name }}</strong>
