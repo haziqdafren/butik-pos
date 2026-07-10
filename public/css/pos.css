@@ -72,7 +72,6 @@ button, input, select, textarea { font: inherit; }
     background: var(--nav);
     color: white;
     padding: 24px 16px 20px;
-    /* z-index MUST be higher than the reopen btn (35) so sidebar covers it when open */
     z-index: 45;
     display: flex;
     flex-direction: column;
@@ -104,67 +103,50 @@ body.sidebar-collapsed .main { margin-left: 0; }
 
 /* ── Sidebar header ──────────────────────────────────────── */
 .sidebar-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 8px;
     margin-bottom: 4px;
     flex-shrink: 0;
 }
 .brand { font-size: 18px; font-weight: 800; letter-spacing: .2px; line-height: 1.2; }
 .brand-sub { color: #7a9baa; font-size: 10px; text-transform: uppercase; letter-spacing: 1.6px; margin-top: 2px; }
 
-/* ── Collapse button (✕ inside sidebar) ─────────────────── */
-.sidebar-collapse-btn {
-    background: rgba(255,255,255,.07);
-    border: 1px solid rgba(255,255,255,.10);
-    color: #98aab3;
-    cursor: pointer;
-    font-size: 12px;
-    padding: 5px 9px;
-    border-radius: 6px;
-    line-height: 1;
-    flex-shrink: 0;
-    transition: background .15s, color .15s;
-    margin-top: 2px;
-}
-.sidebar-collapse-btn:hover { background: rgba(255,255,255,.15); color: white; }
-
-/* ── Reopen button (▶ floats top-left when collapsed) ────── */
-/*
- * z-index: 35 — BELOW sidebar (45) so sidebar covers it when open.
- * Only becomes visible/clickable when body.sidebar-collapsed is set.
- * Transitions in with opacity + slide so it feels intentional.
- */
-.sidebar-reopen-btn {
-    position: fixed;
-    top: 13px;
-    left: 13px;
-    z-index: 35;
-    background: var(--nav);
-    color: white;
-    border: 1px solid rgba(255,255,255,.12);
-    border-radius: 8px;
-    width: 36px;
-    height: 36px;
-    font-size: 14px;
-    cursor: pointer;
+/* ── Sidebar toggle btn (in topbar, desktop only) ─────────── */
+.sidebar-toggle-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 20px rgba(16,33,41,.30);
-    /* Hidden by default — sidebar covers this position */
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .25s ease .05s, background .15s;
+    width: 36px;
+    height: 36px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    border-radius: 6px;
+    color: var(--ink);
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+    transition: background .15s;
 }
-.sidebar-reopen-btn:hover { background: var(--accent); border-color: var(--accent); }
-
-/* Only show when sidebar is collapsed (slid off-screen) */
-body.sidebar-collapsed .sidebar-reopen-btn {
-    opacity: 1;
-    pointer-events: auto;
+.sidebar-toggle-btn:hover { background: var(--mist); }
+.sidebar-toggle-icon {
+    display: block;
+    width: 18px;
+    height: 2px;
+    background: currentColor;
+    border-radius: 2px;
+    position: relative;
 }
+.sidebar-toggle-icon::before,
+.sidebar-toggle-icon::after {
+    content: '';
+    display: block;
+    width: 18px;
+    height: 2px;
+    background: currentColor;
+    border-radius: 2px;
+    position: absolute;
+    left: 0;
+}
+.sidebar-toggle-icon::before { top: -6px; }
+.sidebar-toggle-icon::after  { top:  6px; }
 
 /* ── Role card ───────────────────────────────────────────── */
 .role-card {
@@ -522,10 +504,8 @@ tr:last-child td { border-bottom: none; }
     }
     /* On mobile, "open" class shows it (hamburger); ignore collapse state */
     .sidebar.open { transform: translateX(0) !important; }
-    /* Hide the desktop collapse button on mobile */
-    .sidebar-collapse-btn { display: none; }
-    /* Hide the reopen button on mobile */
-    .sidebar-reopen-btn { display: none !important; }
+    /* Hide the desktop sidebar toggle in topbar on mobile */
+    .sidebar-toggle-btn { display: none; }
 
     /* Overlay */
     .sidebar-overlay {

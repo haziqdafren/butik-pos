@@ -8,15 +8,11 @@
 </head>
 <body>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
-<button class="sidebar-reopen-btn" id="sidebarReopenBtn" onclick="toggleSidebarCollapse()" title="Buka sidebar">▶</button>
 <div class="app-shell">
     <aside class="sidebar" id="appSidebar">
         <div class="sidebar-header">
-            <div>
-                <div class="brand">Butik POS</div>
-                <div class="brand-sub">Retail management</div>
-            </div>
-            <button class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" title="Sembunyikan sidebar">✕</button>
+            <div class="brand">Butik POS</div>
+            <div class="brand-sub">Retail management</div>
         </div>
         <div class="role-card">
             <small>Login sebagai</small>
@@ -77,6 +73,9 @@
 
     <main class="main">
         <header class="topbar">
+            <button class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="toggleSidebarCollapse()" title="Toggle sidebar" aria-label="Toggle sidebar">
+                <span class="sidebar-toggle-icon"></span>
+            </button>
             <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Buka menu">
                 <div class="hamburger-icon">
                     <span></span><span></span><span></span>
