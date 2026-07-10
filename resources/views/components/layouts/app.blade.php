@@ -132,18 +132,16 @@
 <script>
 // ── Sidebar collapse (fully hide / show) ────────────────────
 function toggleSidebarCollapse() {
-    var shell       = document.querySelector('.app-shell');
-    var collapseBtn = document.querySelector('.sidebar-collapse-btn');
-    var collapsed   = shell.classList.toggle('sidebar-collapsed');
-    if (collapseBtn) collapseBtn.textContent = collapsed ? '▶' : '◀';
+    var shell     = document.querySelector('.app-shell');
+    var collapsed = shell.classList.toggle('sidebar-collapsed');
+    document.body.classList.toggle('sidebar-collapsed', collapsed);
     try { localStorage.setItem('sidebar_collapsed', collapsed ? '1' : '0'); } catch(e) {}
 }
 document.addEventListener('DOMContentLoaded', function() {
     try {
         if (localStorage.getItem('sidebar_collapsed') === '1') {
             document.querySelector('.app-shell').classList.add('sidebar-collapsed');
-            var cb = document.querySelector('.sidebar-collapse-btn');
-            if (cb) cb.textContent = '▶';
+            document.body.classList.add('sidebar-collapsed');
         }
     } catch(e) {}
 });
