@@ -328,7 +328,7 @@
 
         res.items.forEach(i => {
             pushLine(i.name);
-            if (i.attrs && i.attrs.length) pushLine(i.attrs.join(' \u00b7 '));
+            if (i.attrs && i.attrs.length) pushLine(i.attrs.join(' - '));
             pushLine(pad(i.qty + 'x', fmtRp(i.line_total), 32));
         });
         pushLine('--------------------------------');
