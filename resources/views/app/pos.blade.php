@@ -360,9 +360,44 @@
         btn.disabled    = disabled;
     }
 
-    // ── Checkout form: Bluetooth path ──────────────────────────────────────────
+    // ── Checkout form: Bluetooth + fallback path ───────────────────────────────
     document.getElementById('checkoutForm').addEventListener('submit', async function(e) {
-        if (!navigator.bluetooth) return; // let normal form submit happen
+        if (!navigator.bluetooth) {
+            // No Web Bluetooth — submit via fetch, open receipt in new tab for browser print
+            e.preventDefault();
+            const btn = this.querySelector('button[type=submit]') || this.querySelector('button');
+            const originalText = btn ? btn.textContent : '';
+            if (btn) { btn.disabled = true; btn.textContent = 'Menyimpan...'; }
+            try {
+                const formData = new FormData(this);
+                formData.append('ajax_checkout', '1');
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+                    },
+                    body: formData
+                });
+                const res = await response.json();
+                if (!response.ok) {
+                    const msg = res.errors ? Object.values(res.errors)[0][0] : (res.message || 'Gagal checkout');
+                    if (typeof showToast === 'function') showToast(msg, 'error');
+                    if (btn) { btn.disabled = false; btn.textContent = originalText; }
+                    return;
+                }
+                // Open receipt in new tab so kasir can print via browser
+                const receiptUrl = '/kasir/struk/' + res.sale_id + '?reprint=1';
+                window.open(receiptUrl, '_blank');
+                setTimeout(() => { window.location.href = window.location.pathname; }, 800);
+            } catch (err) {
+                if (typeof showToast === 'function') showToast('Gagal: ' + err.message, 'error');
+                if (btn) { btn.disabled = false; btn.textContent = originalText; }
+            }
+            return;
+        }
         e.preventDefault();
 
         const btn          = this.querySelector('button[type=submit], button:not([type])') || this.querySelector('button');
